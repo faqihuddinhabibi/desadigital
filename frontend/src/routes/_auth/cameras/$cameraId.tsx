@@ -92,9 +92,7 @@ function CameraDetailPage() {
           </p>
         </div>
         <span className={`badge ml-auto ${
-          camera.status === 'online' ? 'badge-online' :
-          camera.status === 'offline' ? 'badge-offline' :
-          'badge-maintenance'
+          camera.status === 'online' ? 'badge-online' : 'badge-offline'
         }`}>
           {camera.status}
         </span>

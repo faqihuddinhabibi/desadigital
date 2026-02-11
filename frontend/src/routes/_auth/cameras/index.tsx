@@ -65,7 +65,6 @@ function CamerasPage() {
           <option value="">Semua Status</option>
           <option value="online">Online</option>
           <option value="offline">Offline</option>
-          <option value="maintenance">Maintenance</option>
         </select>
         {user?.role === 'superadmin' && (
           <select
@@ -120,9 +119,7 @@ function CamerasPage() {
                   )}
                   <div className="absolute top-2 right-2">
                     <span className={`badge ${
-                      camera.status === 'online' ? 'badge-online' :
-                      camera.status === 'offline' ? 'badge-offline' :
-                      'badge-maintenance'
+                      camera.status === 'online' ? 'badge-online' : 'badge-offline'
                     }`}>
                       {camera.status}
                     </span>

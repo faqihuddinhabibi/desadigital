@@ -1,5 +1,5 @@
 {
-  "id": "4cf7e65d-34e9-4e55-9719-34fd23eb099e",
+  "id": "993cfa15-d6a7-4271-8086-cbc440354090",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -641,8 +641,7 @@
       "schema": "public",
       "values": [
         "online",
-        "offline",
-        "maintenance"
+        "offline"
       ]
     },
     "public.user_role": {

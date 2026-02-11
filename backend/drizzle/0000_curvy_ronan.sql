@@ -1,4 +1,4 @@
-CREATE TYPE "public"."camera_status" AS ENUM('online', 'offline', 'maintenance');--> statement-breakpoint
+CREATE TYPE "public"."camera_status" AS ENUM('online', 'offline');--> statement-breakpoint
 CREATE TYPE "public"."user_role" AS ENUM('superadmin', 'admin_rt', 'warga');--> statement-breakpoint
 CREATE TABLE "activity_logs" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,

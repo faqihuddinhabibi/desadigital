@@ -95,9 +95,7 @@ function DashboardPage() {
                   )}
                   <div className="absolute top-2 right-2">
                     <span className={`badge ${
-                      camera.status === 'online' ? 'badge-online' :
-                      camera.status === 'offline' ? 'badge-offline' :
-                      'badge-maintenance'
+                      camera.status === 'online' ? 'badge-online' : 'badge-offline'
                     }`}>
                       {camera.status}
                     </span>
