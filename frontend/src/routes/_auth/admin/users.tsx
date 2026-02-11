@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../../lib/api';
-import { useState } from 'react';
-import { Plus, Search, Edit, Trash2, Loader2 } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Plus, Search, Edit, Trash2, Loader2, ChevronDown, Check } from 'lucide-react';
 import type { PaginatedResponse, User, RT } from '../../../types';
 
 export const Route = createFileRoute('/_auth/admin/users')({
@@ -51,7 +51,7 @@ function UsersPage() {
           <thead className="bg-muted">
             <tr>
               <th className="px-4 py-3 text-left text-sm font-medium">Nama</th>
-              <th className="px-4 py-3 text-left text-sm font-medium hidden md:table-cell">Email</th>
+              <th className="px-4 py-3 text-left text-sm font-medium hidden md:table-cell">Username</th>
               <th className="px-4 py-3 text-left text-sm font-medium">Role</th>
               <th className="px-4 py-3 text-left text-sm font-medium hidden lg:table-cell">Status</th>
               <th className="px-4 py-3 text-right text-sm font-medium">Aksi</th>
@@ -106,7 +106,6 @@ function UserForm({ user, onClose }: { user: User | null; onClose: () => void })
   const [password, setPassword] = useState('');
   const [role, setRole] = useState(user?.role || 'warga');
   const [rtId, setRtId] = useState(user?.rtId || '');
-  const [rtSearch, setRtSearch] = useState('');
 
   const { data: rts } = useQuery({
     queryKey: ['rts', 'all'],
@@ -158,22 +157,13 @@ function UserForm({ user, onClose }: { user: User | null; onClose: () => void })
           {(role === 'admin_rt' || role === 'warga') && (
             <div>
               <label className="text-sm font-medium">Area (RT)</label>
-              <input
-                type="text"
-                value={rtSearch}
-                onChange={(e) => setRtSearch(e.target.value)}
-                className="input mt-1"
-                placeholder="Cari RT atau Desa..."
+              <SearchableSelect
+                options={rts?.data || []}
+                value={rtId}
+                onChange={setRtId}
+                placeholder="Pilih RT"
+                required
               />
-              <select value={rtId} onChange={(e) => setRtId(e.target.value)} className="input mt-2" required>
-                <option value="">Pilih RT</option>
-                {rts?.data
-                  .filter(r => 
-                    r.name.toLowerCase().includes(rtSearch.toLowerCase()) ||
-                    r.desaName?.toLowerCase().includes(rtSearch.toLowerCase())
-                  )
-                  .map((r) => <option key={r.id} value={r.id}>{r.name} - {r.desaName}</option>)}
-              </select>
             </div>
           )}
           <div className="flex gap-2 justify-end">
@@ -184,6 +174,94 @@ function UserForm({ user, onClose }: { user: User | null; onClose: () => void })
           </div>
         </form>
       </div>
+    </div>
+  );
+}
+
+function SearchableSelect({ 
+  options, 
+  value, 
+  onChange, 
+  placeholder,
+  required 
+}: { 
+  options: RT[]; 
+  value: string; 
+  onChange: (value: string) => void; 
+  placeholder: string;
+  required?: boolean;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const filteredOptions = options.filter(r => 
+    r.name.toLowerCase().includes(search.toLowerCase()) ||
+    r.desaName?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const selectedOption = options.find(o => o.id === value);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={containerRef} className="relative mt-1">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="input w-full text-left flex items-center justify-between"
+      >
+        <span className={selectedOption ? '' : 'text-muted-foreground'}>
+          {selectedOption ? `${selectedOption.name} - ${selectedOption.desaName}` : placeholder}
+        </span>
+        <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+      {required && !value && <input type="text" required className="sr-only" tabIndex={-1} />}
+      
+      {isOpen && (
+        <div className="absolute z-50 mt-1 w-full bg-card border rounded-lg shadow-lg max-h-60 overflow-hidden">
+          <div className="p-2 border-b">
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Cari RT atau Desa..."
+                className="input pl-8 py-1.5 text-sm"
+                autoFocus
+              />
+            </div>
+          </div>
+          <div className="overflow-y-auto max-h-44">
+            {filteredOptions.length === 0 ? (
+              <div className="px-3 py-2 text-sm text-muted-foreground">Tidak ditemukan</div>
+            ) : (
+              filteredOptions.map((r) => (
+                <button
+                  key={r.id}
+                  type="button"
+                  onClick={() => { onChange(r.id); setIsOpen(false); setSearch(''); }}
+                  className={`w-full px-3 py-2 text-left text-sm hover:bg-muted flex items-center justify-between ${
+                    value === r.id ? 'bg-primary/10 text-primary' : ''
+                  }`}
+                >
+                  <span>{r.name} - {r.desaName}</span>
+                  {value === r.id && <Check className="h-4 w-4" />}
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

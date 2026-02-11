@@ -37,10 +37,8 @@ function LoginPage() {
 
     try {
       await login(username, password);
-      navigate({ to: '/' });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
-    } finally {
       setIsLoading(false);
     }
   };
