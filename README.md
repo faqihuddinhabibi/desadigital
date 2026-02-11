@@ -423,39 +423,78 @@ npm run dev
 
 ### Backend Environment Variables
 
-| Variable | Deskripsi | Contoh | Wajib |
-|----------|-----------|--------|-------|
-| `NODE_ENV` | Environment mode | `development` / `production` | Ya |
-| `PORT` | Port backend server | `4000` | Ya |
-| `DATABASE_URL` | Connection string PostgreSQL | `postgres://user:pass@host:5432/db` | Ya |
-| `JWT_SECRET` | Secret key untuk access token | String acak 32+ karakter | Ya |
-| `JWT_REFRESH_SECRET` | Secret key untuk refresh token | String acak 32+ karakter | Ya |
-| `ENCRYPTION_KEY` | Key enkripsi RTSP URL (64 hex chars) | `0123456789abcdef...` | Ya |
-| `CORS_ORIGIN` | URL frontend yang diizinkan | `http://localhost:3000` | Ya |
-| `LOG_LEVEL` | Level logging | `debug` / `info` / `warn` / `error` | Tidak |
-| `STREAMS_DIR` | Direktori penyimpanan stream HLS | `./streams` | Tidak |
+| Variable | Deskripsi | Development | Production |
+|----------|-----------|-------------|------------|
+| `NODE_ENV` | Mode aplikasi | `development` | `production` |
+| `PORT` | Port backend | `4000` | `4000` |
+| `DATABASE_URL` | Connection PostgreSQL | `postgres://postgres:postgres@postgres:5432/desa_digital` | Ganti password! |
+| `JWT_SECRET` | Secret access token | `dev-jwt-secret...` | **Wajib diganti!** |
+| `JWT_REFRESH_SECRET` | Secret refresh token | `dev-jwt-refresh...` | **Wajib diganti!** |
+| `ENCRYPTION_KEY` | Key enkripsi RTSP (64 hex) | Default dev key | **Wajib diganti!** |
+| `CORS_ORIGIN` | URL frontend | `http://localhost:3000` | `https://domain-anda.com` |
+| `LOG_LEVEL` | Level logging | `debug` | `info` |
 
 ### Frontend Environment Variables
 
-| Variable | Deskripsi | Contoh | Wajib |
-|----------|-----------|--------|-------|
-| `VITE_API_URL` | URL backend API | `http://localhost:4000` | Ya |
-| `VITE_APP_NAME` | Nama aplikasi | `Desa Digital` | Tidak |
+| Variable | Deskripsi | Development | Production |
+|----------|-----------|-------------|------------|
+| `VITE_API_URL` | URL backend API | `http://localhost:4000` | `https://api.domain-anda.com` |
 
-### Generate Secret Keys
+### Contoh Konfigurasi Development (Default)
 
-Untuk production, gunakan secret yang kuat:
+File `backend/.env`:
+```env
+NODE_ENV=development
+PORT=4000
+DATABASE_URL=postgres://postgres:postgres@postgres:5432/desa_digital
+JWT_SECRET=dev-jwt-secret-change-in-production
+JWT_REFRESH_SECRET=dev-jwt-refresh-secret-change-in-production
+ENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+CORS_ORIGIN=http://localhost:3000
+LOG_LEVEL=debug
+STREAMS_DIR=./streams
+```
+
+### Contoh Konfigurasi Production
+
+⚠️ **PENTING:** Untuk production, WAJIB generate secret keys baru!
 
 ```bash
-# Generate random string untuk JWT_SECRET
-openssl rand -hex 32
-
-# Generate random string untuk JWT_REFRESH_SECRET
-openssl rand -hex 32
-
-# Generate ENCRYPTION_KEY (64 hex characters = 32 bytes)
-openssl rand -hex 32
+# Generate secret keys di terminal
+openssl rand -hex 32  # Untuk JWT_SECRET
+openssl rand -hex 32  # Untuk JWT_REFRESH_SECRET  
+openssl rand -hex 32  # Untuk ENCRYPTION_KEY
 ```
+
+File `backend/.env` untuk production:
+```env
+NODE_ENV=production
+PORT=4000
+DATABASE_URL=postgres://postgres:PASSWORD_KUAT_ANDA@postgres:5432/desa_digital
+JWT_SECRET=hasil_dari_openssl_rand_hex_32_pertama
+JWT_REFRESH_SECRET=hasil_dari_openssl_rand_hex_32_kedua
+ENCRYPTION_KEY=hasil_dari_openssl_rand_hex_32_ketiga
+CORS_ORIGIN=https://cctv.domain-anda.com
+LOG_LEVEL=info
+STREAMS_DIR=/app/streams
+```
+
+File `frontend/.env` untuk production:
+```env
+VITE_API_URL=https://api.cctv.domain-anda.com
+```
+
+### Penjelasan CORS
+
+**CORS (Cross-Origin Resource Sharing)** mengontrol domain mana yang boleh mengakses API.
+
+| Situasi | Nilai CORS_ORIGIN |
+|---------|-------------------|
+| Development lokal | `http://localhost:3000` |
+| Production dengan domain | `https://cctv.domain-anda.com` |
+| Multiple domain | `https://domain1.com,https://domain2.com` |
+
+⚠️ Jika CORS salah konfigurasi, frontend tidak bisa berkomunikasi dengan backend!
 
 ---
 
