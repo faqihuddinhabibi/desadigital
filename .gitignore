@@ -43,7 +43,6 @@ coverage/
 # Streams (CCTV HLS files)
 streams/
 *.m3u8
-*.ts
 
 # Docker
 docker/volumes/
