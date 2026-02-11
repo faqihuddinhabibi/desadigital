@@ -1,5 +1,5 @@
 {
-  "id": "993cfa15-d6a7-4271-8086-cbc440354090",
+  "id": "b9582271-65f3-445d-89ed-259d9f8b1e46",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -209,12 +209,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "code": {
-          "name": "code",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": true
-        },
         "address": {
           "name": "address",
           "type": "text",
@@ -239,15 +233,7 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "desas_code_unique": {
-          "name": "desas_code_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "code"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

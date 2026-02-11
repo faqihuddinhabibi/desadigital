@@ -193,7 +193,9 @@ function SearchableSelect({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
 
   const filteredOptions = options.filter(r => 
     r.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -204,7 +206,8 @@ function SearchableSelect({
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      if (buttonRef.current && !buttonRef.current.contains(e.target as Node) &&
+          dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setIsOpen(false);
       }
     };
@@ -212,9 +215,23 @@ function SearchableSelect({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setDropdownStyle({
+        position: 'fixed',
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: rect.width,
+        zIndex: 9999,
+      });
+    }
+  }, [isOpen]);
+
   return (
-    <div ref={containerRef} className="relative mt-1">
+    <div className="mt-1">
       <button
+        ref={buttonRef}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="input w-full text-left flex items-center justify-between"
@@ -227,8 +244,8 @@ function SearchableSelect({
       {required && !value && <input type="text" required className="sr-only" tabIndex={-1} />}
       
       {isOpen && (
-        <div className="absolute z-50 mt-1 w-full bg-card border rounded-lg shadow-lg max-h-60 overflow-hidden">
-          <div className="p-2 border-b">
+        <div ref={dropdownRef} style={dropdownStyle} className="bg-card border rounded-lg shadow-lg max-h-60 overflow-hidden">
+          <div className="p-2 border-b sticky top-0 bg-card">
             <div className="relative">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input

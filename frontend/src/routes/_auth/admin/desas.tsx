@@ -58,23 +58,21 @@ function DesasPage() {
           <thead className="bg-muted">
             <tr>
               <th className="px-4 py-3 text-left text-sm font-medium">Nama</th>
-              <th className="px-4 py-3 text-left text-sm font-medium">Kode</th>
-              <th className="px-4 py-3 text-left text-sm font-medium hidden md:table-cell">Alamat</th>
+              <th className="px-4 py-3 text-left text-sm font-medium">Alamat</th>
               <th className="px-4 py-3 text-left text-sm font-medium hidden lg:table-cell">Dibuat</th>
               <th className="px-4 py-3 text-right text-sm font-medium">Aksi</th>
             </tr>
           </thead>
           <tbody className="divide-y">
             {isLoading ? (
-              <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">Memuat...</td></tr>
+              <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">Memuat...</td></tr>
             ) : data?.data.length === 0 ? (
-              <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">Tidak ada desa</td></tr>
+              <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">Tidak ada desa</td></tr>
             ) : (
               data?.data.map((desa) => (
                 <tr key={desa.id} className="hover:bg-muted/50">
                   <td className="px-4 py-3 font-medium">{desa.name}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{desa.code}</td>
-                  <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{desa.address || '-'}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{desa.address || '-'}</td>
                   <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">{formatDate(desa.createdAt)}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-2">
@@ -109,11 +107,10 @@ function DesasPage() {
 function DesaForm({ desa, onClose }: { desa: Desa | null; onClose: () => void }) {
   const queryClient = useQueryClient();
   const [name, setName] = useState(desa?.name || '');
-  const [code, setCode] = useState(desa?.code || '');
   const [address, setAddress] = useState(desa?.address || '');
 
   const mutation = useMutation({
-    mutationFn: (data: { name: string; code: string; address?: string }) =>
+    mutationFn: (data: { name: string; address?: string }) =>
       desa ? api.patch(`/desas/${desa.id}`, data) : api.post('/desas', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['desas'] });
@@ -123,7 +120,7 @@ function DesaForm({ desa, onClose }: { desa: Desa | null; onClose: () => void })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    mutation.mutate({ name, code, address: address || undefined });
+    mutation.mutate({ name, address: address || undefined });
   };
 
   return (
@@ -134,10 +131,6 @@ function DesaForm({ desa, onClose }: { desa: Desa | null; onClose: () => void })
           <div>
             <label className="text-sm font-medium">Nama</label>
             <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="input mt-1" required />
-          </div>
-          <div>
-            <label className="text-sm font-medium">Kode</label>
-            <input type="text" value={code} onChange={(e) => setCode(e.target.value)} className="input mt-1" required />
           </div>
           <div>
             <label className="text-sm font-medium">Alamat</label>
