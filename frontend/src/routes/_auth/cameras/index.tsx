@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../../lib/api';
-import { Camera, Plus, Search } from 'lucide-react';
+import { Camera, Plus, Search, X, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../../../hooks/useAuth';
-import type { PaginatedResponse, Camera as CameraType } from '../../../types';
+import type { PaginatedResponse, Camera as CameraType, RT, Desa } from '../../../types';
 
 export const Route = createFileRoute('/_auth/cameras/')({
   component: CamerasPage,
@@ -14,12 +14,19 @@ function CamerasPage() {
   const { user } = useAuth();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
+  const [desaFilter, setDesaFilter] = useState<string>('');
   const [page, setPage] = useState(1);
+  const [showForm, setShowForm] = useState(false);
+
+  const { data: desas } = useQuery({
+    queryKey: ['desas'],
+    queryFn: () => api.get<PaginatedResponse<Desa>>('/desas?limit=100'),
+  });
 
   const { data, isLoading } = useQuery({
-    queryKey: ['cameras', { page, search, status: statusFilter }],
+    queryKey: ['cameras', { page, search, status: statusFilter, desaId: desaFilter }],
     queryFn: () => api.get<PaginatedResponse<CameraType>>(
-      `/cameras?page=${page}&limit=20${search ? `&search=${search}` : ''}${statusFilter ? `&status=${statusFilter}` : ''}`
+      `/cameras?page=${page}&limit=20${search ? `&search=${search}` : ''}${statusFilter ? `&status=${statusFilter}` : ''}${desaFilter ? `&desaId=${desaFilter}` : ''}`
     ),
   });
 
@@ -32,7 +39,7 @@ function CamerasPage() {
         </div>
         
         {(user?.role === 'superadmin' || user?.role === 'admin_rt') && (
-          <button className="btn btn-primary">
+          <button onClick={() => setShowForm(true)} className="btn btn-primary">
             <Plus className="h-4 w-4" />
             Tambah Kamera
           </button>
@@ -60,6 +67,16 @@ function CamerasPage() {
           <option value="offline">Offline</option>
           <option value="maintenance">Maintenance</option>
         </select>
+        {user?.role === 'superadmin' && (
+          <select
+            value={desaFilter}
+            onChange={(e) => setDesaFilter(e.target.value)}
+            className="input w-full sm:w-48"
+          >
+            <option value="">Semua Desa</option>
+            {desas?.data.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+          </select>
+        )}
       </div>
 
       {isLoading ? (
@@ -144,6 +161,124 @@ function CamerasPage() {
           )}
         </>
       )}
+
+      {showForm && <CameraForm onClose={() => setShowForm(false)} />}
+    </div>
+  );
+}
+
+function CameraForm({ onClose }: { onClose: () => void }) {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const [name, setName] = useState('');
+  const [location, setLocation] = useState('');
+  const [rtspUrl, setRtspUrl] = useState('');
+  const [rtId, setRtId] = useState(user?.rtId || '');
+  const [rtSearch, setRtSearch] = useState('');
+
+  const { data: rts } = useQuery({
+    queryKey: ['rts', 'all'],
+    queryFn: () => api.get<PaginatedResponse<RT>>('/rts?limit=100'),
+  });
+
+  const filteredRts = rts?.data.filter(r => 
+    r.name.toLowerCase().includes(rtSearch.toLowerCase()) ||
+    r.desaName?.toLowerCase().includes(rtSearch.toLowerCase())
+  ) || [];
+
+  const mutation = useMutation({
+    mutationFn: (data: { name: string; location: string; rtspUrl: string; rtId: string }) =>
+      api.post('/cameras', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cameras'] });
+      onClose();
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    mutation.mutate({ name, location, rtspUrl, rtId });
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="card max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Tambah Kamera</h2>
+          <button onClick={onClose} className="btn btn-ghost p-2">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="text-sm font-medium">Nama Kamera</label>
+            <input 
+              type="text" 
+              value={name} 
+              onChange={(e) => setName(e.target.value)} 
+              className="input mt-1" 
+              placeholder="Kamera Pos RT 01"
+              required 
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium">Lokasi</label>
+            <input 
+              type="text" 
+              value={location} 
+              onChange={(e) => setLocation(e.target.value)} 
+              className="input mt-1" 
+              placeholder="Pos RT 01 Sukamaju"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium">RTSP URL</label>
+            <input 
+              type="text" 
+              value={rtspUrl} 
+              onChange={(e) => setRtspUrl(e.target.value)} 
+              className="input mt-1" 
+              placeholder="rtsp://admin:password@192.168.1.100:554/stream"
+              required 
+            />
+            <p className="text-xs text-muted-foreground mt-1">Format: rtsp://username:password@ip:port/path</p>
+          </div>
+          {user?.role === 'superadmin' && (
+            <div>
+              <label className="text-sm font-medium">Area (RT)</label>
+              <input
+                type="text"
+                value={rtSearch}
+                onChange={(e) => setRtSearch(e.target.value)}
+                className="input mt-1"
+                placeholder="Cari RT atau Desa..."
+              />
+              <select 
+                value={rtId} 
+                onChange={(e) => setRtId(e.target.value)} 
+                className="input mt-2" 
+                required
+              >
+                <option value="">Pilih RT</option>
+                {filteredRts.map((r) => (
+                  <option key={r.id} value={r.id}>{r.name} - {r.desaName}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          {mutation.isError && (
+            <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-lg text-sm">
+              Gagal menambahkan kamera. Silakan coba lagi.
+            </div>
+          )}
+          <div className="flex gap-2 justify-end">
+            <button type="button" onClick={onClose} className="btn btn-secondary">Batal</button>
+            <button type="submit" disabled={mutation.isPending} className="btn btn-primary">
+              {mutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Simpan'}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

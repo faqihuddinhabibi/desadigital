@@ -106,6 +106,7 @@ function UserForm({ user, onClose }: { user: User | null; onClose: () => void })
   const [password, setPassword] = useState('');
   const [role, setRole] = useState(user?.role || 'warga');
   const [rtId, setRtId] = useState(user?.rtId || '');
+  const [rtSearch, setRtSearch] = useState('');
 
   const { data: rts } = useQuery({
     queryKey: ['rts', 'all'],
@@ -156,10 +157,22 @@ function UserForm({ user, onClose }: { user: User | null; onClose: () => void })
           </div>
           {(role === 'admin_rt' || role === 'warga') && (
             <div>
-              <label className="text-sm font-medium">RT</label>
-              <select value={rtId} onChange={(e) => setRtId(e.target.value)} className="input mt-1" required>
+              <label className="text-sm font-medium">Area (RT)</label>
+              <input
+                type="text"
+                value={rtSearch}
+                onChange={(e) => setRtSearch(e.target.value)}
+                className="input mt-1"
+                placeholder="Cari RT atau Desa..."
+              />
+              <select value={rtId} onChange={(e) => setRtId(e.target.value)} className="input mt-2" required>
                 <option value="">Pilih RT</option>
-                {rts?.data.map((r) => <option key={r.id} value={r.id}>{r.name} - {r.desaName}</option>)}
+                {rts?.data
+                  .filter(r => 
+                    r.name.toLowerCase().includes(rtSearch.toLowerCase()) ||
+                    r.desaName?.toLowerCase().includes(rtSearch.toLowerCase())
+                  )
+                  .map((r) => <option key={r.id} value={r.id}>{r.name} - {r.desaName}</option>)}
               </select>
             </div>
           )}
