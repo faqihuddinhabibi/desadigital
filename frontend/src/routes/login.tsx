@@ -14,7 +14,7 @@ function LoginPage() {
   const navigate = useNavigate();
   const { theme, setTheme, resolvedTheme } = useTheme();
   
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -31,7 +31,7 @@ function LoginPage() {
     setIsLoading(true);
 
     try {
-      await login(email, password);
+      await login(username, password);
       navigate({ to: '/' });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
@@ -80,18 +80,18 @@ function LoginPage() {
           )}
 
           <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium">
-              Email
+            <label htmlFor="username" className="text-sm font-medium">
+              Username
             </label>
             <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              id="username"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className={cn('input', error && 'border-destructive')}
-              placeholder="admin@desadigital.id"
+              placeholder="superadmin"
               required
-              autoComplete="email"
+              autoComplete="username"
             />
           </div>
 

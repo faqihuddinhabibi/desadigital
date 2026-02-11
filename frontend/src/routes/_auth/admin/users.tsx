@@ -66,7 +66,7 @@ function UsersPage() {
               data?.data.map((user) => (
                 <tr key={user.id} className="hover:bg-muted/50">
                   <td className="px-4 py-3 font-medium">{user.name}</td>
-                  <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{user.email}</td>
+                  <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{user.username}</td>
                   <td className="px-4 py-3"><span className="badge bg-primary/20 text-primary capitalize">{user.role.replace('_', ' ')}</span></td>
                   <td className="px-4 py-3 hidden lg:table-cell">
                     <span className={`badge ${user.isActive ? 'badge-online' : 'badge-offline'}`}>{user.isActive ? 'Aktif' : 'Nonaktif'}</span>
@@ -102,7 +102,7 @@ function UsersPage() {
 function UserForm({ user, onClose }: { user: User | null; onClose: () => void }) {
   const queryClient = useQueryClient();
   const [name, setName] = useState(user?.name || '');
-  const [email, setEmail] = useState(user?.email || '');
+  const [username, setUsername] = useState(user?.username || '');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState(user?.role || 'warga');
   const [rtId, setRtId] = useState(user?.rtId || '');
@@ -113,7 +113,7 @@ function UserForm({ user, onClose }: { user: User | null; onClose: () => void })
   });
 
   const mutation = useMutation({
-    mutationFn: (data: { name: string; email: string; password?: string; role: string; rtId?: string }) =>
+    mutationFn: (data: { name: string; username: string; password?: string; role: string; rtId?: string }) =>
       user ? api.patch(`/users/${user.id}`, data) : api.post('/users', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
@@ -123,7 +123,7 @@ function UserForm({ user, onClose }: { user: User | null; onClose: () => void })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const data: { name: string; email: string; password?: string; role: string; rtId?: string } = { name, email, role };
+    const data: { name: string; username: string; password?: string; role: string; rtId?: string } = { name, username, role };
     if (password) data.password = password;
     if (rtId) data.rtId = rtId;
     mutation.mutate(data);
@@ -139,8 +139,8 @@ function UserForm({ user, onClose }: { user: User | null; onClose: () => void })
             <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="input mt-1" required />
           </div>
           <div>
-            <label className="text-sm font-medium">Email</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="input mt-1" required />
+            <label className="text-sm font-medium">Username</label>
+            <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="input mt-1" required pattern="^[a-z0-9_]+$" title="Hanya huruf kecil, angka, dan underscore" />
           </div>
           <div>
             <label className="text-sm font-medium">Password {user && '(kosongkan jika tidak diubah)'}</label>

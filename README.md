@@ -585,18 +585,20 @@ NODE_ENV=production node backend/dist/index.js
 
 Setelah menjalankan `db:seed`, akun berikut akan dibuat:
 
-| Role | Email | Password |
-|------|-------|----------|
-| **Superadmin** | `superadmin@fibernode.id` | `SuperAdmin123!` |
+| Role | Username | Password |
+|------|----------|----------|
+| **Superadmin** | `superadmin` | `Admin123!` |
+| **Admin RT** | `adminrt01` | `AdminRT123!` |
+| **Warga** | `warga01` | `Warga123!` |
 
 ⚠️ **PENTING:** Segera ganti password default setelah login pertama!
 
 ### Cara Login
 
 1. Buka http://localhost:3000
-2. Masukkan email: `superadmin@fibernode.id`
-3. Masukkan password: `SuperAdmin123!`
-4. Klik **Login**
+2. Masukkan username: `superadmin`
+3. Masukkan password: `Admin123!`
+4. Klik **Masuk**
 
 ### Ganti Password
 

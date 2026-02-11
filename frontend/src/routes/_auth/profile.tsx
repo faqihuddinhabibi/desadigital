@@ -75,7 +75,7 @@ function ProfilePage() {
           </div>
           <div>
             <h2 className="text-xl font-semibold">{user?.name}</h2>
-            <p className="text-muted-foreground">{user?.email}</p>
+            <p className="text-muted-foreground">{user?.username}</p>
             <p className="text-sm text-muted-foreground capitalize">{user?.role.replace('_', ' ')}</p>
           </div>
         </div>
@@ -104,15 +104,15 @@ function ProfilePage() {
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium">Email</label>
+            <label htmlFor="username" className="text-sm font-medium">Username</label>
             <input
-              id="email"
-              type="email"
-              value={user?.email}
+              id="username"
+              type="text"
+              value={user?.username}
               className="input bg-muted"
               disabled
             />
-            <p className="text-xs text-muted-foreground">Email tidak dapat diubah</p>
+            <p className="text-xs text-muted-foreground">Username tidak dapat diubah</p>
           </div>
 
           <hr className="my-6" />

@@ -1,0 +1,79 @@
+name: CD
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+
+jobs:
+  deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      
+      - name: Install backend dependencies
+        run: npm install
+        working-directory: ./backend
+      
+      - name: Build backend
+        run: npm run build
+        working-directory: ./backend
+      
+      - name: Install frontend dependencies
+        run: npm install
+        working-directory: ./frontend
+      
+      - name: Build frontend
+        run: npm run build
+        working-directory: ./frontend
+      
+      - name: Build Docker images
+        run: docker compose build
+      
+      # Deploy step - uncomment and configure based on your deployment target
+      # Example for Docker Hub:
+      # - name: Login to Docker Hub
+      #   uses: docker/login-action@v3
+      #   with:
+      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
+      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
+      
+      # - name: Push Docker images
+      #   run: |
+      #     docker tag desadigital-backend ${{ secrets.DOCKERHUB_USERNAME }}/desadigital-backend:latest
+      #     docker tag desadigital-frontend ${{ secrets.DOCKERHUB_USERNAME }}/desadigital-frontend:latest
+      #     docker push ${{ secrets.DOCKERHUB_USERNAME }}/desadigital-backend:latest
+      #     docker push ${{ secrets.DOCKERHUB_USERNAME }}/desadigital-frontend:latest
+      
+      # Example for SSH deployment:
+      # - name: Deploy to server
+      #   uses: appleboy/ssh-action@v1.0.0
+      #   with:
+      #     host: ${{ secrets.SERVER_HOST }}
+      #     username: ${{ secrets.SERVER_USER }}
+      #     key: ${{ secrets.SERVER_SSH_KEY }}
+      #     script: |
+      #       cd /path/to/app
+      #       git pull origin main
+      #       docker compose down
+      #       docker compose up -d --build
+      
+      - name: Deployment ready
+        run: |
+          echo "✅ Build successful!"
+          echo "📦 Docker images built and ready for deployment"
+          echo ""
+          echo "To deploy, configure one of the deployment options above:"
+          echo "1. Docker Hub - push images to registry"
+          echo "2. SSH Deploy - deploy directly to server"
+          echo "3. Cloud Deploy - configure for AWS/GCP/Azure"

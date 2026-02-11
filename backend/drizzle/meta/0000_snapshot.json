@@ -1,5 +1,5 @@
 {
-  "id": "ab4b37c9-aa79-4806-b0b4-d7c55e8488eb",
+  "id": "4cf7e65d-34e9-4e55-9719-34fd23eb099e",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -263,9 +263,9 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "email": {
-          "name": "email",
-          "type": "varchar(255)",
+        "username": {
+          "name": "username",
+          "type": "varchar(50)",
           "primaryKey": false,
           "notNull": true
         },
@@ -296,11 +296,11 @@
         }
       },
       "indexes": {
-        "idx_login_attempts_email_created": {
-          "name": "idx_login_attempts_email_created",
+        "idx_login_attempts_username_created": {
+          "name": "idx_login_attempts_username_created",
           "columns": [
             {
-              "expression": "email",
+              "expression": "username",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -545,9 +545,9 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "email": {
-          "name": "email",
-          "type": "varchar(255)",
+        "username": {
+          "name": "username",
+          "type": "varchar(50)",
           "primaryKey": false,
           "notNull": true
         },
@@ -622,11 +622,11 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "users_email_unique": {
-          "name": "users_email_unique",
+        "users_username_unique": {
+          "name": "users_username_unique",
           "nullsNotDistinct": false,
           "columns": [
-            "email"
+            "username"
           ]
         }
       },

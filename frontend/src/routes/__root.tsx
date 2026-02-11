@@ -4,7 +4,7 @@ import { ThemeProvider } from '../hooks/useTheme';
 
 interface RouterContext {
   auth: {
-    user: { id: string; email: string; name: string; role: string; rtId: string | null } | null;
+    user: { id: string; username: string; name: string; role: string; rtId: string | null } | null;
     isAuthenticated: boolean;
     isLoading: boolean;
   };

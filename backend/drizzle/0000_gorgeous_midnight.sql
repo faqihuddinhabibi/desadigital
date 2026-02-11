@@ -37,7 +37,7 @@ CREATE TABLE "desas" (
 --> statement-breakpoint
 CREATE TABLE "login_attempts" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"email" varchar(255) NOT NULL,
+	"username" varchar(50) NOT NULL,
 	"ip_address" varchar(45) NOT NULL,
 	"success" boolean NOT NULL,
 	"user_agent" varchar(500),
@@ -68,7 +68,7 @@ CREATE TABLE "rts" (
 --> statement-breakpoint
 CREATE TABLE "users" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"email" varchar(255) NOT NULL,
+	"username" varchar(50) NOT NULL,
 	"password_hash" varchar(255) NOT NULL,
 	"name" varchar(255) NOT NULL,
 	"role" "user_role" NOT NULL,
@@ -77,7 +77,7 @@ CREATE TABLE "users" (
 	"last_login_at" timestamp with time zone,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "users_email_unique" UNIQUE("email")
+	CONSTRAINT "users_username_unique" UNIQUE("username")
 );
 --> statement-breakpoint
 ALTER TABLE "activity_logs" ADD CONSTRAINT "activity_logs_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
@@ -86,7 +86,7 @@ ALTER TABLE "cameras" ADD CONSTRAINT "cameras_created_by_id_users_id_fk" FOREIGN
 ALTER TABLE "refresh_tokens" ADD CONSTRAINT "refresh_tokens_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "rts" ADD CONSTRAINT "rts_desa_id_desas_id_fk" FOREIGN KEY ("desa_id") REFERENCES "public"."desas"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "users" ADD CONSTRAINT "users_rt_id_rts_id_fk" FOREIGN KEY ("rt_id") REFERENCES "public"."rts"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-CREATE INDEX "idx_login_attempts_email_created" ON "login_attempts" USING btree ("email","created_at");--> statement-breakpoint
+CREATE INDEX "idx_login_attempts_username_created" ON "login_attempts" USING btree ("username","created_at");--> statement-breakpoint
 CREATE INDEX "idx_login_attempts_ip_created" ON "login_attempts" USING btree ("ip_address","created_at");--> statement-breakpoint
 CREATE INDEX "idx_refresh_tokens_user_id" ON "refresh_tokens" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "idx_refresh_tokens_expires" ON "refresh_tokens" USING btree ("expires_at");

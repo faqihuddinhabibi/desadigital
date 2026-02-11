@@ -6,7 +6,7 @@ interface AuthContextType {
   user: AuthUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -30,8 +30,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
-    const response = await api.post<LoginResponse>('/auth/login', { email, password }, { skipAuth: true });
+  const login = useCallback(async (username: string, password: string) => {
+    const response = await api.post<LoginResponse>('/auth/login', { username, password }, { skipAuth: true });
     api.setTokens(response.accessToken, response.refreshToken);
     setUser(response.user);
   }, []);
