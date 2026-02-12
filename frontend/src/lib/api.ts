@@ -19,6 +19,7 @@ class ApiClient {
     this.refreshToken = refreshToken;
     localStorage.setItem('accessToken', accessToken);
     localStorage.setItem('refreshToken', refreshToken);
+    window.dispatchEvent(new CustomEvent('auth:token-changed'));
   }
 
   clearTokens() {
@@ -26,6 +27,7 @@ class ApiClient {
     this.refreshToken = null;
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
+    window.dispatchEvent(new CustomEvent('auth:token-changed'));
   }
 
   getAccessToken() {

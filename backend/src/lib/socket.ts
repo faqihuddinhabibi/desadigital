@@ -5,10 +5,10 @@ import { logger } from '../utils/logger.js';
 
 let io: Server | null = null;
 
-export function initSocket(httpServer: HttpServer, corsOrigin: string) {
+export function initSocket(httpServer: HttpServer, corsOrigin: boolean | string | string[] | ((origin: string | undefined, callback: (err: Error | null, allow?: boolean | string) => void) => void)) {
   io = new Server(httpServer, {
     cors: {
-      origin: corsOrigin,
+      origin: corsOrigin as any,
       credentials: true,
     },
     path: '/ws',

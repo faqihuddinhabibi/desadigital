@@ -149,8 +149,7 @@ Scroll ke bawah ke bagian **Environment variables**, klik **Advanced mode**, lal
 ```env
 POSTGRES_PASSWORD=GantiDenganPasswordKuat123
 JWT_SECRET=paste_random_string_32_karakter_1
-JWT_REFRESH_SECRET=paste_random_string_32_karakter_2
-ENCRYPTION_KEY=paste_random_hex_64_karakter_3
+ENCRYPTION_KEY=paste_random_hex_64_karakter_2
 CORS_ORIGIN=http://IP_CONTAINER_ANDA
 ADMIN_USERNAME=superadmin
 ADMIN_PASSWORD=PasswordKuatAnda123!
@@ -159,6 +158,11 @@ SEED_DEMO_DATA=false
 ```
 
 > **Generate random key** di: https://generate-random.org/api-key-generator (pilih 256-bit Hex untuk `ENCRYPTION_KEY`, 256-bit untuk lainnya)
+>
+> **CORS_ORIGIN** mendukung:
+> - Satu origin: `http://IP_SERVER`
+> - Multi-origin (pisah koma): `http://IP_SERVER,https://cctv.desaanda.com`
+> - Wildcard (dev only): `*`
 
 ### Langkah 3: Deploy!
 

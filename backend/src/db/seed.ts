@@ -9,7 +9,7 @@ const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://desadigital:secre
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'superadmin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin123!';
 const ADMIN_NAME = process.env.ADMIN_NAME || 'Super Admin';
-const SEED_DEMO_DATA = process.env.SEED_DEMO_DATA !== 'false';
+const SEED_DEMO_DATA = process.env.SEED_DEMO_DATA === 'true';
 
 const hashOptions = {
   memoryCost: 19456,

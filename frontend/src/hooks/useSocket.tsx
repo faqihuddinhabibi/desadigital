@@ -8,8 +8,34 @@ export function SocketProvider({ children }: { children: ReactNode }) {
   const [socket, setSocket] = useState<Socket | null>(null);
   const queryClient = useQueryClient();
   const socketRef = useRef<Socket | null>(null);
+  const [tokenVersion, setTokenVersion] = useState(0);
+
+  // Listen for same-tab auth changes (login/logout)
+  useEffect(() => {
+    const handler = () => setTokenVersion((v) => v + 1);
+    window.addEventListener('auth:token-changed', handler);
+    return () => window.removeEventListener('auth:token-changed', handler);
+  }, []);
+
+  // Reconnect when token changes (cross-tab)
+  useEffect(() => {
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'accessToken') {
+        setTokenVersion((v) => v + 1);
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
 
   useEffect(() => {
+    // Disconnect existing socket
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+      socketRef.current = null;
+      setSocket(null);
+    }
+
     const token = localStorage.getItem('accessToken');
     if (!token) return;
 
@@ -70,22 +96,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
       s.disconnect();
       socketRef.current = null;
     };
-  }, [queryClient]);
-
-  // Reconnect when token changes (login/logout)
-  useEffect(() => {
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === 'accessToken') {
-        socketRef.current?.disconnect();
-        if (e.newValue && socketRef.current) {
-          socketRef.current.auth = { token: e.newValue };
-          socketRef.current.connect();
-        }
-      }
-    };
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
-  }, []);
+  }, [queryClient, tokenVersion]);
 
   return (
     <SocketContext.Provider value={socket}>

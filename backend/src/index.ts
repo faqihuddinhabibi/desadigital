@@ -8,6 +8,7 @@ import { logger } from './utils/logger.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { rateLimit } from './middleware/rateLimit.js';
 import { initSocket } from './lib/socket.js';
+import { parseCorsOrigin } from './lib/cors.js';
 
 import { authRouter } from './modules/auth/auth.controller.js';
 import { usersRouter } from './modules/users/users.controller.js';
@@ -21,12 +22,17 @@ import { uploadsRouter } from './modules/uploads/uploads.controller.js';
 const app = express();
 const httpServer = createServer(app);
 
+// Trust nginx reverse proxy — ensures req.ip returns real client IP
+app.set('trust proxy', true);
+
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
 
+const corsOrigin = parseCorsOrigin(env.CORS_ORIGIN);
+
 app.use(cors({
-  origin: env.CORS_ORIGIN,
+  origin: corsOrigin,
   credentials: true,
 }));
 
@@ -59,7 +65,7 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 // Initialize WebSocket
-initSocket(httpServer, env.CORS_ORIGIN);
+initSocket(httpServer, corsOrigin);
 
 const PORT = env.PORT;
 

@@ -28,7 +28,6 @@ services:
       PORT: 4000
       DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-desa_digital}
       JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-change-in-production-min32chars}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-dev-jwt-refresh-secret-change-in-production}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost}
       STREAMS_DIR: /app/streams
