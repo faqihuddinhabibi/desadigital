@@ -1,4 +1,5 @@
 import express from 'express';
+import { createServer } from 'http';
 import cors from 'cors';
 import helmet from 'helmet';
 import { pinoHttp } from 'pino-http';
@@ -6,6 +7,7 @@ import { env } from './config/env.js';
 import { logger } from './utils/logger.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { rateLimit } from './middleware/rateLimit.js';
+import { initSocket } from './lib/socket.js';
 
 import { authRouter } from './modules/auth/auth.controller.js';
 import { usersRouter } from './modules/users/users.controller.js';
@@ -16,6 +18,7 @@ import { dashboardRouter } from './modules/dashboard/dashboard.controller.js';
 import { settingsRouter } from './modules/settings/settings.controller.js';
 
 const app = express();
+const httpServer = createServer(app);
 
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
@@ -53,11 +56,15 @@ app.use('/api/settings', settingsRouter);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
+// Initialize WebSocket
+initSocket(httpServer, env.CORS_ORIGIN);
+
 const PORT = env.PORT;
 
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   logger.info(`🚀 Server running on http://localhost:${PORT}`);
   logger.info(`📚 Environment: ${env.NODE_ENV}`);
+  logger.info(`🔌 WebSocket ready on /ws`);
 });
 
 export default app;

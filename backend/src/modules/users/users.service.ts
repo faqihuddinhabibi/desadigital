@@ -130,7 +130,12 @@ export async function createUser(data: CreateUserInput) {
       isActive: users.isActive,
       createdAt: users.createdAt,
     });
-  
+
+  const { emitDashboardRefresh } = await import('../../lib/socket.js');
+  const { sendTelegramNotification } = await import('../settings/telegram.service.js');
+  emitDashboardRefresh();
+  sendTelegramNotification('user_created', `👤 <b>User Baru Dibuat</b>\n\n🧑 <b>${user.name}</b> (@${user.username})\n🔑 Role: ${user.role}`);
+
   return user;
 }
 

@@ -42,9 +42,20 @@ export async function setSetting(key: string, value: string | null) {
 
 export async function updateSettings(data: UpdateSettingsInput) {
   const entries = Object.entries(data).filter(([, v]) => v !== undefined);
+  const updatedKeys: string[] = [];
   for (const [key, value] of entries) {
     await setSetting(key, value === null ? null : String(value));
+    updatedKeys.push(key);
   }
+
+  // Emit socket events for real-time updates
+  const { emitSettingsUpdated, emitBrandingUpdated } = await import('../../lib/socket.js');
+  emitSettingsUpdated(updatedKeys);
+  const brandingKeys = ['app_name', 'site_subtitle', 'logo_url', 'splash_logo_url', 'favicon_url', 'meta_title', 'meta_description', 'og_image_url'];
+  if (updatedKeys.some(k => brandingKeys.includes(k))) {
+    emitBrandingUpdated();
+  }
+
   return getAllSettings();
 }
 

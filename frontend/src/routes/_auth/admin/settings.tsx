@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../../lib/api';
 import { useState, useEffect } from 'react';
-import { Save, Loader2, Send, Plus, Trash2, Play, RefreshCw, Globe, Shield, Bot, Activity, CheckCircle2, XCircle, Clock, Image, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
+import { Save, Loader2, Send, Plus, Trash2, Play, RefreshCw, Globe, Shield, Bot, Activity, CheckCircle2, XCircle, Clock, Image, BookOpen, ChevronDown, ChevronUp, Bell } from 'lucide-react';
 
 export const Route = createFileRoute('/_auth/admin/settings')({
   component: SettingsPage,
@@ -518,6 +518,68 @@ function TelegramSettings() {
           <CheckCircle2 className="h-4 w-4" />Pengaturan Telegram disimpan
         </div>
       )}
+
+      {/* Notification Toggles */}
+      {enabled && <NotificationToggles />}
+    </div>
+  );
+}
+
+// ── Notification Toggles ──
+
+interface NotifToggle {
+  key: string;
+  label: string;
+  description: string;
+  enabled: boolean;
+}
+
+function NotificationToggles() {
+  const queryClient = useQueryClient();
+  const { data: toggles, isLoading } = useQuery({
+    queryKey: ['notification-toggles'],
+    queryFn: () => api.get<NotifToggle[]>('/settings/notifications'),
+  });
+
+  const mutation = useMutation({
+    mutationFn: (data: Record<string, boolean>) => api.patch('/settings/notifications', data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notification-toggles'] }),
+  });
+
+  const handleToggle = (key: string, enabled: boolean) => {
+    mutation.mutate({ [key]: enabled });
+  };
+
+  if (isLoading) return <div className="card p-6 text-center text-muted-foreground">Memuat pengaturan notifikasi...</div>;
+
+  return (
+    <div className="card">
+      <h3 className="text-lg font-semibold mb-1 flex items-center gap-2">
+        <Bell className="h-5 w-5" />
+        Pengaturan Notifikasi
+      </h3>
+      <p className="text-sm text-muted-foreground mb-4">Pilih notifikasi mana yang ingin dikirim ke Telegram</p>
+
+      <div className="space-y-3">
+        {toggles?.map((item) => (
+          <div key={item.key} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+            <div>
+              <p className="text-sm font-medium">{item.label}</p>
+              <p className="text-xs text-muted-foreground">{item.description}</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-4">
+              <input
+                type="checkbox"
+                checked={item.enabled}
+                onChange={(e) => handleToggle(item.key, e.target.checked)}
+                className="sr-only peer"
+                disabled={mutation.isPending}
+              />
+              <div className="w-11 h-6 bg-muted rounded-full peer peer-checked:bg-primary transition-colors after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+            </label>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

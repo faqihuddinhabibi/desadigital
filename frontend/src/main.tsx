@@ -5,6 +5,7 @@ import { RouterProvider, createRouter } from '@tanstack/react-router';
 import { routeTree } from './routeTree.gen';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { BrandingProvider, type Branding } from './hooks/useBranding';
+import { SocketProvider } from './hooks/useSocket';
 import './index.css';
 
 const queryClient = new QueryClient({
@@ -79,11 +80,13 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <BrandingProvider initialBranding={branding}>
-        <AuthProvider>
-          <InnerApp />
-        </AuthProvider>
-      </BrandingProvider>
+      <SocketProvider>
+        <BrandingProvider initialBranding={branding}>
+          <AuthProvider>
+            <InnerApp />
+          </AuthProvider>
+        </BrandingProvider>
+      </SocketProvider>
     </QueryClientProvider>
   );
 }

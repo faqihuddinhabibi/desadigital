@@ -109,7 +109,13 @@ export async function login(
     ipAddress,
     metadata: { userAgent },
   });
-  
+
+  // Real-time + Telegram notification
+  const { emitUserLogin } = await import('../../lib/socket.js');
+  const { sendTelegramNotification } = await import('../settings/telegram.service.js');
+  emitUserLogin({ id: user.id, name: user.name, role: user.role });
+  sendTelegramNotification('user_login', `👤 <b>User Login</b>\n\n🧑 <b>${user.name}</b> (@${user.username})\n🔑 Role: ${user.role}\n🌐 IP: ${ipAddress}`);
+
   return {
     accessToken,
     refreshToken,

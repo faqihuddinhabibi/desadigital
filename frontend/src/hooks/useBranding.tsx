@@ -71,7 +71,7 @@ export function BrandingProvider({ children, initialBranding }: { children: Reac
     }
   }, [branding]);
 
-  // Re-fetch branding when settings change (optional — triggered by invalidation)
+  // Re-sync when initialBranding prop changes
   useEffect(() => {
     if (initialBranding) {
       setBranding({
@@ -80,6 +80,25 @@ export function BrandingProvider({ children, initialBranding }: { children: Reac
       });
     }
   }, [initialBranding]);
+
+  // Listen for live branding updates via WebSocket
+  useEffect(() => {
+    const handler = () => {
+      fetch('/api/settings/branding')
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data) {
+            setBranding({
+              ...DEFAULT_BRANDING,
+              ...Object.fromEntries(Object.entries(data).filter(([, v]) => v !== null)),
+            });
+          }
+        })
+        .catch(() => {});
+    };
+    window.addEventListener('branding:updated', handler);
+    return () => window.removeEventListener('branding:updated', handler);
+  }, []);
 
   return (
     <BrandingContext.Provider value={branding}>

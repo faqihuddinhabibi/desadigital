@@ -3,6 +3,8 @@ import { db } from '../../db/index.js';
 import { cameras, rts, desas, users } from '../../db/schema.js';
 import { createError } from '../../middleware/errorHandler.js';
 import { encrypt } from '../../utils/encryption.js';
+import { emitCameraCreated, emitCameraUpdated, emitCameraDeleted, emitCameraStatusChange, emitDashboardRefresh } from '../../lib/socket.js';
+import { sendTelegramNotification } from '../settings/telegram.service.js';
 import type { CreateCameraInput, UpdateCameraInput, ListCamerasQuery } from './cameras.schema.js';
 import type { JwtPayload } from '../../utils/jwt.js';
 
@@ -137,6 +139,10 @@ export async function createCamera(data: CreateCameraInput, userId: string) {
       createdAt: cameras.createdAt,
     });
   
+  emitCameraCreated({ id: camera.id, name: camera.name, rtId: camera.rtId });
+  emitDashboardRefresh();
+  sendTelegramNotification('camera_added', `📷 <b>Kamera Baru Ditambahkan</b>\n\n📷 <b>${camera.name}</b>\n📍 ${camera.location || '-'}`);
+
   return camera;
 }
 
@@ -180,6 +186,16 @@ export async function updateCamera(id: string, data: UpdateCameraInput, user: Jw
       updatedAt: cameras.updatedAt,
     });
   
+  emitCameraUpdated({ id: camera.id, name: camera.name, rtId: camera.rtId });
+  if (data.status && data.status !== existing.status) {
+    emitCameraStatusChange({ id: camera.id, name: camera.name, rtId: camera.rtId, status: camera.status });
+    emitDashboardRefresh();
+    const eventType = data.status === 'online' ? 'camera_online' : 'camera_offline';
+    const icon = data.status === 'online' ? '🟢' : '🔴';
+    const label = data.status === 'online' ? 'Kamera Online' : 'Kamera Offline';
+    sendTelegramNotification(eventType, `${icon} <b>${label}</b>\n\n📷 <b>${camera.name}</b>\n📍 ${camera.location || '-'}`);
+  }
+
   return camera;
 }
 
@@ -196,6 +212,10 @@ export async function deleteCamera(id: string, user: JwtPayload) {
   
   await db.delete(cameras).where(eq(cameras.id, id));
   
+  emitCameraDeleted(id, existing.rtId);
+  emitDashboardRefresh();
+  sendTelegramNotification('camera_deleted', `🗑 <b>Kamera Dihapus</b>\n\n📷 <b>${existing.name}</b>`);
+
   return { message: 'Camera deleted successfully' };
 }
 

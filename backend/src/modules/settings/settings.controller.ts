@@ -3,7 +3,7 @@ import { authMiddleware } from '../../middleware/auth.js';
 import { requireRole } from '../../middleware/roleGuard.js';
 import { updateSettingsSchema, createEndpointSchema, updateEndpointSchema } from './settings.schema.js';
 import * as settingsService from './settings.service.js';
-import { testTelegramConnection } from './telegram.service.js';
+import { testTelegramConnection, getNotificationToggles } from './telegram.service.js';
 
 export const settingsRouter = Router();
 
@@ -120,6 +120,32 @@ settingsRouter.post('/monitoring/check-all', authMiddleware, requireRole('supera
   try {
     const results = await settingsService.checkAllEndpoints();
     res.json(results);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ── Notification Toggles ──
+
+settingsRouter.get('/notifications', authMiddleware, requireRole('superadmin'), async (_req, res, next) => {
+  try {
+    const toggles = await getNotificationToggles();
+    res.json(toggles);
+  } catch (error) {
+    next(error);
+  }
+});
+
+settingsRouter.patch('/notifications', authMiddleware, requireRole('superadmin'), async (req, res, next) => {
+  try {
+    const toggles = req.body as Record<string, boolean>;
+    for (const [key, enabled] of Object.entries(toggles)) {
+      if (key.startsWith('notif_')) {
+        await settingsService.setSetting(key, enabled ? 'true' : 'false');
+      }
+    }
+    const updated = await getNotificationToggles();
+    res.json(updated);
   } catch (error) {
     next(error);
   }

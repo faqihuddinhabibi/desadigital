@@ -1,6 +1,19 @@
-import { getSetting } from './settings.service.js';
+import { getSetting, getSettings } from './settings.service.js';
 
 const timestamp = () => new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
+
+// All notification event types that can be toggled
+export const NOTIFICATION_EVENTS = [
+  { key: 'notif_camera_online', label: 'Kamera Online', description: 'Saat kamera kembali online' },
+  { key: 'notif_camera_offline', label: 'Kamera Offline', description: 'Saat kamera terputus/offline' },
+  { key: 'notif_camera_added', label: 'Kamera Ditambahkan', description: 'Saat kamera baru ditambahkan' },
+  { key: 'notif_camera_deleted', label: 'Kamera Dihapus', description: 'Saat kamera dihapus' },
+  { key: 'notif_user_login', label: 'User Login', description: 'Saat user berhasil login' },
+  { key: 'notif_user_created', label: 'User Baru', description: 'Saat user baru dibuat' },
+  { key: 'notif_system_alert', label: 'Peringatan Sistem', description: 'Peringatan kesehatan sistem' },
+] as const;
+
+export type NotificationEventKey = typeof NOTIFICATION_EVENTS[number]['key'];
 
 export async function sendTelegramMessage(message: string) {
   const botToken = await getSetting('telegram_bot_token');
@@ -28,6 +41,21 @@ export async function sendTelegramMessage(message: string) {
   }
 }
 
+/**
+ * Send a telegram notification only if the event type is enabled in settings.
+ * eventType maps to settings key "notif_<eventType>" e.g. "camera_online" → "notif_camera_online"
+ */
+export async function sendTelegramNotification(eventType: string, message: string) {
+  const settingKey = `notif_${eventType}`;
+  const toggle = await getSetting(settingKey);
+  // Default to enabled if setting doesn't exist yet (toggle === null)
+  if (toggle === 'false') {
+    return null;
+  }
+  const fullMessage = `${message}\n🕐 ${timestamp()}`;
+  return sendTelegramMessage(fullMessage);
+}
+
 export async function testTelegramConnection(botToken: string, chatId: string) {
   try {
     const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
@@ -46,40 +74,17 @@ export async function testTelegramConnection(botToken: string, chatId: string) {
   }
 }
 
-// ── Camera Alerts with offline list ──
-
-export async function sendCameraOfflineAlert(cameraName: string, location: string, offlineList: string[]) {
-  let message = `🔴 <b>Kamera Terputus</b>\n\n📷 <b>${cameraName}</b>\n📍 ${location}\n🕐 ${timestamp()}`;
-  if (offlineList.length > 0) {
-    message += `\n\n📋 <b>Daftar kamera offline (${offlineList.length}):</b>`;
-    for (const name of offlineList) {
-      message += `\n  • ${name}`;
-    }
-  }
-  return sendTelegramMessage(message);
-}
-
-export async function sendCameraOnlineAlert(cameraName: string, location: string, offlineList: string[]) {
-  let message = `🟢 <b>Kamera Terhubung Kembali</b>\n\n📷 <b>${cameraName}</b>\n📍 ${location}\n🕐 ${timestamp()}`;
-  if (offlineList.length > 0) {
-    message += `\n\n📋 <b>Masih offline (${offlineList.length}):</b>`;
-    for (const name of offlineList) {
-      message += `\n  • ${name}`;
-    }
-  } else {
-    message += '\n\n✅ Semua kamera online!';
-  }
-  return sendTelegramMessage(message);
+export async function getNotificationToggles() {
+  const keys = NOTIFICATION_EVENTS.map(e => e.key);
+  const values = await getSettings(keys);
+  return NOTIFICATION_EVENTS.map(e => ({
+    ...e,
+    enabled: values[e.key] !== 'false', // default enabled
+  }));
 }
 
 // ── System Alerts ──
 
 export async function sendSystemAlert(title: string, detail: string) {
-  const message = `⚠️ <b>${title}</b>\n\n${detail}\n🕐 ${timestamp()}`;
-  return sendTelegramMessage(message);
-}
-
-export async function sendBackupAlert(filename: string, size: string, totalBackups: number) {
-  const message = `💾 <b>Backup Database Berhasil</b>\n\n📁 File: <code>${filename}</code>\n📦 Ukuran: ${size}\n🗂 Total backup: ${totalBackups} file\n🕐 ${timestamp()}`;
-  return sendTelegramMessage(message);
+  return sendTelegramNotification('system_alert', `⚠️ <b>${title}</b>\n\n${detail}`);
 }
