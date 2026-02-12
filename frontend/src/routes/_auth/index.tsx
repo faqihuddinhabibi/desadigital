@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute, Link, Navigate } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import { useAuth } from '../../hooks/useAuth';
@@ -11,6 +11,10 @@ export const Route = createFileRoute('/_auth/')({
 
 function DashboardPage() {
   const { user } = useAuth();
+
+  if (user?.role === 'admin_rt' || user?.role === 'warga') {
+    return <Navigate to="/cameras" />;
+  }
 
   const { data: stats } = useQuery({
     queryKey: ['dashboard', 'stats'],

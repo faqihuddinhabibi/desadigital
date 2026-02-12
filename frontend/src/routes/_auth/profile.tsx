@@ -46,8 +46,8 @@ function ProfilePage() {
         setMessage({ type: 'error', text: 'Password baru tidak cocok' });
         return;
       }
-      if (newPassword.length < 8) {
-        setMessage({ type: 'error', text: 'Password minimal 8 karakter' });
+      if (newPassword.length < 6) {
+        setMessage({ type: 'error', text: 'Password minimal 6 karakter' });
         return;
       }
       data.password = newPassword;

@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../../lib/api';
-import { Camera, Plus, Search, X, Loader2, ChevronDown, Check, Wifi, WifiOff, Edit, Trash2 } from 'lucide-react';
+import { Camera, Plus, Search, X, Loader2, ChevronDown, Check, Wifi, WifiOff, Edit, Trash2, RefreshCw, Grid2X2, Grid3X3, LayoutGrid, Square } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../../hooks/useAuth';
 import type { PaginatedResponse, Camera as CameraType, RT, Desa } from '../../../types';
@@ -10,15 +10,155 @@ export const Route = createFileRoute('/_auth/cameras/')({
   component: CamerasPage,
 });
 
+type GridMode = 1 | 4 | 9 | 16;
+
 function CamerasPage() {
   const { user } = useAuth();
+  const isRtOrWarga = user?.role === 'admin_rt' || user?.role === 'warga';
+
+  if (isRtOrWarga) {
+    return <RTWargaCamerasPage />;
+  }
+
+  return <SuperadminCamerasPage />;
+}
+
+// ── RT / Warga: Full-screen camera grid with floating bottom bar ──
+function RTWargaCamerasPage() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [gridMode, setGridMode] = useState<GridMode>(4);
+  const [showForm, setShowForm] = useState(false);
+  const [editingCamera, setEditingCamera] = useState<CameraType | null>(null);
+
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['cameras', 'rt-grid'],
+    queryFn: () => api.get<PaginatedResponse<CameraType>>('/cameras?limit=100'),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/cameras/${id}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['cameras'] }),
+  });
+
+  const cameras = data?.data || [];
+
+  const gridClasses: Record<GridMode, string> = {
+    1: 'grid-cols-1',
+    4: 'grid-cols-1 sm:grid-cols-2',
+    9: 'grid-cols-2 md:grid-cols-3',
+    16: 'grid-cols-2 md:grid-cols-4',
+  };
+
+  return (
+    <div className="flex flex-col h-[calc(100vh-57px)]">
+      <div className="flex-1 p-3 lg:p-4 overflow-auto pb-24">
+        {isLoading ? (
+          <div className={`grid ${gridClasses[gridMode]} gap-3`}>
+            {[...Array(gridMode)].map((_, i) => (
+              <div key={i} className="aspect-video bg-muted rounded-lg animate-pulse" />
+            ))}
+          </div>
+        ) : cameras.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-center">
+            <Camera className="h-16 w-16 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium mb-2">Belum ada kamera</h3>
+            <p className="text-muted-foreground mb-4">Tidak ada kamera yang tersedia.</p>
+            {user?.role === 'admin_rt' && (
+              <button onClick={() => setShowForm(true)} className="btn btn-primary">
+                <Plus className="h-4 w-4" /> Tambah Kamera
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className={`grid ${gridClasses[gridMode]} gap-3`}>
+            {cameras.map((camera) => (
+              <div key={camera.id} className="relative group aspect-video bg-muted dark:bg-zinc-900 rounded-lg overflow-hidden border border-transparent hover:border-primary transition-all duration-300">
+                <Link
+                  to="/cameras/$cameraId"
+                  params={{ cameraId: camera.id }}
+                  className="absolute inset-0 flex items-center justify-center"
+                >
+                  <Camera className="h-12 w-12 text-muted-foreground/50" />
+                </Link>
+                {camera.status === 'offline' && (
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center pointer-events-none">
+                    <span className="text-white text-sm font-medium">Offline</span>
+                  </div>
+                )}
+                <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm px-3 py-2 flex justify-between items-center">
+                  <Link to="/cameras/$cameraId" params={{ cameraId: camera.id }} className="truncate flex-1 min-w-0">
+                    <span className="text-xs font-bold text-white uppercase tracking-wide truncate block">{camera.name}</span>
+                  </Link>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {user?.role === 'admin_rt' && (
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => setEditingCamera(camera)} className="p-1 hover:bg-white/20 rounded" title="Edit">
+                          <Edit className="h-3 w-3 text-white" />
+                        </button>
+                        <button onClick={() => { if (confirm(`Hapus "${camera.name}"?`)) deleteMutation.mutate(camera.id); }} className="p-1 hover:bg-white/20 rounded" title="Hapus">
+                          <Trash2 className="h-3 w-3 text-red-400" />
+                        </button>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-1.5">
+                      <span className={`w-2 h-2 rounded-full ${camera.status === 'online' ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
+                      <span className={`text-[10px] font-bold uppercase tracking-tighter ${camera.status === 'online' ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {camera.status}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Floating Bottom Control Bar */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[40] flex items-center gap-2 p-2 bg-card/90 backdrop-blur-xl rounded-xl border shadow-2xl">
+        <div className="flex items-center bg-muted rounded-lg p-1">
+          <button onClick={() => setGridMode(1)} className={`flex items-center justify-center w-10 h-10 rounded-md transition-colors ${gridMode === 1 ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-primary'}`} title="1 Kamera">
+            <Square className="h-4 w-4" />
+          </button>
+          <button onClick={() => setGridMode(4)} className={`flex items-center justify-center w-10 h-10 rounded-md transition-colors ${gridMode === 4 ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-primary'}`} title="2x2 Grid">
+            <Grid2X2 className="h-4 w-4" />
+          </button>
+          <button onClick={() => setGridMode(9)} className={`flex items-center justify-center w-10 h-10 rounded-md transition-colors ${gridMode === 9 ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-primary'}`} title="3x3 Grid">
+            <Grid3X3 className="h-4 w-4" />
+          </button>
+          <button onClick={() => setGridMode(16)} className={`flex items-center justify-center w-10 h-10 rounded-md transition-colors ${gridMode === 16 ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-primary'}`} title="4x4 Grid">
+            <LayoutGrid className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="h-8 w-px bg-border mx-1" />
+        <div className="flex items-center gap-1">
+          <button onClick={() => refetch()} className="flex items-center gap-2 px-4 h-10 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-all font-bold text-sm">
+            <RefreshCw className="h-4 w-4" /> Refresh
+          </button>
+          {user?.role === 'admin_rt' && (
+            <button onClick={() => setShowForm(true)} className="flex items-center gap-2 px-4 h-10 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-all font-bold text-sm">
+              <Plus className="h-4 w-4" /> Tambah
+            </button>
+          )}
+        </div>
+      </div>
+
+      {showForm && <CameraForm onClose={() => setShowForm(false)} />}
+      {editingCamera && <EditCameraForm camera={editingCamera} onClose={() => setEditingCamera(null)} />}
+    </div>
+  );
+}
+
+// ── Superadmin: Original cameras page with filters and pagination ──
+function SuperadminCamerasPage() {
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [desaFilter, setDesaFilter] = useState<string>('');
   const [page, setPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
   const [editingCamera, setEditingCamera] = useState<CameraType | null>(null);
-  const queryClient = useQueryClient();
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/cameras/${id}`),
@@ -44,45 +184,25 @@ function CamerasPage() {
           <h1 className="text-2xl font-semibold">Kamera CCTV</h1>
           <p className="text-muted-foreground">Kelola dan pantau kamera CCTV</p>
         </div>
-        
-        {(user?.role === 'superadmin' || user?.role === 'admin_rt') && (
-          <button onClick={() => setShowForm(true)} className="btn btn-primary">
-            <Plus className="h-4 w-4" />
-            Tambah Kamera
-          </button>
-        )}
+        <button onClick={() => setShowForm(true)} className="btn btn-primary">
+          <Plus className="h-4 w-4" /> Tambah Kamera
+        </button>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Cari kamera..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="input pl-10"
-          />
+          <input type="text" placeholder="Cari kamera..." value={search} onChange={(e) => setSearch(e.target.value)} className="input pl-10" />
         </div>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="input w-full sm:w-40"
-        >
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="input w-full sm:w-40">
           <option value="">Semua Status</option>
           <option value="online">Online</option>
           <option value="offline">Offline</option>
         </select>
-        {user?.role === 'superadmin' && (
-          <select
-            value={desaFilter}
-            onChange={(e) => setDesaFilter(e.target.value)}
-            className="input w-full sm:w-48"
-          >
-            <option value="">Semua Desa</option>
-            {desas?.data.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-          </select>
-        )}
+        <select value={desaFilter} onChange={(e) => setDesaFilter(e.target.value)} className="input w-full sm:w-48">
+          <option value="">Semua Desa</option>
+          {desas?.data.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+        </select>
       </div>
 
       {isLoading ? (
@@ -110,10 +230,7 @@ function CamerasPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {data?.data.map((camera) => (
               <div key={camera.id} className="card p-0 overflow-hidden group hover:shadow-lg transition-all">
-                <Link
-                  to="/cameras/$cameraId"
-                  params={{ cameraId: camera.id }}
-                >
+                <Link to="/cameras/$cameraId" params={{ cameraId: camera.id }}>
                   <div className="aspect-video bg-muted relative">
                     <div className="absolute inset-0 flex items-center justify-center">
                       <Camera className="h-12 w-12 text-muted-foreground" />
@@ -124,63 +241,28 @@ function CamerasPage() {
                       </div>
                     )}
                     <div className="absolute top-2 right-2">
-                      <span className={`badge ${
-                        camera.status === 'online' ? 'badge-online' : 'badge-offline'
-                      }`}>
-                        {camera.status}
-                      </span>
+                      <span className={`badge ${camera.status === 'online' ? 'badge-online' : 'badge-offline'}`}>{camera.status}</span>
                     </div>
                   </div>
                 </Link>
                 <div className="p-3 flex items-start justify-between gap-2">
                   <Link to="/cameras/$cameraId" params={{ cameraId: camera.id }} className="min-w-0 flex-1">
                     <h3 className="font-medium truncate">{camera.name}</h3>
-                    <p className="text-sm text-muted-foreground truncate">
-                      {camera.location || camera.rtName || 'Lokasi tidak tersedia'}
-                    </p>
+                    <p className="text-sm text-muted-foreground truncate">{camera.location || camera.rtName || 'Lokasi tidak tersedia'}</p>
                   </Link>
-                  {(user?.role === 'superadmin' || user?.role === 'admin_rt') && (
-                    <div className="flex items-center gap-1 shrink-0">
-                      <button
-                        onClick={() => setEditingCamera(camera)}
-                        className="btn btn-ghost p-1.5 h-auto"
-                        title="Edit kamera"
-                      >
-                        <Edit className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        onClick={() => { if (confirm(`Hapus kamera "${camera.name}"?`)) deleteMutation.mutate(camera.id); }}
-                        className="btn btn-ghost p-1.5 h-auto text-destructive"
-                        title="Hapus kamera"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  )}
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button onClick={() => setEditingCamera(camera)} className="btn btn-ghost p-1.5 h-auto" title="Edit"><Edit className="h-3.5 w-3.5" /></button>
+                    <button onClick={() => { if (confirm(`Hapus kamera "${camera.name}"?`)) deleteMutation.mutate(camera.id); }} className="btn btn-ghost p-1.5 h-auto text-destructive" title="Hapus"><Trash2 className="h-3.5 w-3.5" /></button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
-
           {data && data.pagination.totalPages > 1 && (
             <div className="flex items-center justify-center gap-2">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="btn btn-secondary"
-              >
-                Sebelumnya
-              </button>
-              <span className="text-sm text-muted-foreground">
-                Halaman {page} dari {data.pagination.totalPages}
-              </span>
-              <button
-                onClick={() => setPage((p) => Math.min(data.pagination.totalPages, p + 1))}
-                disabled={page === data.pagination.totalPages}
-                className="btn btn-secondary"
-              >
-                Selanjutnya
-              </button>
+              <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="btn btn-secondary">Sebelumnya</button>
+              <span className="text-sm text-muted-foreground">Halaman {page} dari {data.pagination.totalPages}</span>
+              <button onClick={() => setPage((p) => Math.min(data.pagination.totalPages, p + 1))} disabled={page === data.pagination.totalPages} className="btn btn-secondary">Selanjutnya</button>
             </div>
           )}
         </>
