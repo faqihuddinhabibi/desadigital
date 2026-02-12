@@ -28,8 +28,6 @@ services:
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
       CORS_ORIGIN: ${CORS_ORIGIN:-https://desadigital.fibernode.id}
       STREAMS_DIR: /app/streams
-    ports:
-      - "4000:4000"
     volumes:
       - ./streams:/app/streams
     depends_on:
@@ -42,12 +40,50 @@ services:
     image: ${DOCKERHUB_USERNAME}/desadigital-frontend:latest
     container_name: desa-digital-web
     restart: unless-stopped
-    ports:
-      - "3000:3000"
     depends_on:
       - backend
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
+
+  # Nginx reverse proxy with auto-SSL
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: desa-digital-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/certs:/etc/nginx/certs
+      - ./nginx/html:/usr/share/nginx/html
+      - certbot_data:/var/www/certbot
+    depends_on:
+      - frontend
+      - backend
+
+  # Let's Encrypt auto-renewal (optional, used when sslMethod=letsencrypt)
+  certbot:
+    image: certbot/certbot
+    container_name: desa-digital-certbot
+    restart: unless-stopped
+    volumes:
+      - certbot_data:/var/www/certbot
+      - ./nginx/certs:/etc/letsencrypt
+    entrypoint: /bin/sh
+    command: -c "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done"
+
+  # Cloudflare Tunnel (optional, used when sslMethod=cloudflare_tunnel)
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: desa-digital-tunnel
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN:-placeholder}
+    depends_on:
+      - frontend
+      - backend
+    profiles:
+      - cloudflare
 
   ffmpeg-relay:
     image: linuxserver/ffmpeg:latest
@@ -71,3 +107,4 @@ services:
 
 volumes:
   postgres_data:
+  certbot_data:

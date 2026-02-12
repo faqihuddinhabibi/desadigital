@@ -131,6 +131,27 @@ export const loginAttempts = pgTable('login_attempts', {
   index('idx_login_attempts_ip_created').on(table.ipAddress, table.createdAt),
 ]);
 
+export const appSettings = pgTable('app_settings', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  key: varchar('key', { length: 100 }).notNull().unique(),
+  value: text('value'),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const monitoringEndpoints = pgTable('monitoring_endpoints', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  url: varchar('url', { length: 500 }).notNull(),
+  method: varchar('method', { length: 10 }).default('GET').notNull(),
+  expectedStatus: integer('expected_status').default(200).notNull(),
+  intervalSeconds: integer('interval_seconds').default(60).notNull(),
+  isActive: boolean('is_active').default(true).notNull(),
+  lastStatus: integer('last_status'),
+  lastResponseMs: integer('last_response_ms'),
+  lastCheckedAt: timestamp('last_checked_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Desa = typeof desas.$inferSelect;
@@ -142,3 +163,5 @@ export type NewCamera = typeof cameras.$inferInsert;
 export type RefreshToken = typeof refreshTokens.$inferSelect;
 export type ActivityLog = typeof activityLogs.$inferSelect;
 export type LoginAttempt = typeof loginAttempts.$inferSelect;
+export type AppSetting = typeof appSettings.$inferSelect;
+export type MonitoringEndpoint = typeof monitoringEndpoints.$inferSelect;

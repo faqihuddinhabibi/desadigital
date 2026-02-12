@@ -16,6 +16,7 @@ import { Route as AuthProfileRouteImport } from './routes/_auth/profile'
 import { Route as AuthCamerasIndexRouteImport } from './routes/_auth/cameras/index'
 import { Route as AuthCamerasCameraIdRouteImport } from './routes/_auth/cameras/$cameraId'
 import { Route as AuthAdminUsersRouteImport } from './routes/_auth/admin/users'
+import { Route as AuthAdminSettingsRouteImport } from './routes/_auth/admin/settings'
 import { Route as AuthAdminRtsRouteImport } from './routes/_auth/admin/rts'
 import { Route as AuthAdminDesasRouteImport } from './routes/_auth/admin/desas'
 
@@ -53,6 +54,11 @@ const AuthAdminUsersRoute = AuthAdminUsersRouteImport.update({
   path: '/admin/users',
   getParentRoute: () => AuthRoute,
 } as any)
+const AuthAdminSettingsRoute = AuthAdminSettingsRouteImport.update({
+  id: '/admin/settings',
+  path: '/admin/settings',
+  getParentRoute: () => AuthRoute,
+} as any)
 const AuthAdminRtsRoute = AuthAdminRtsRouteImport.update({
   id: '/admin/rts',
   path: '/admin/rts',
@@ -70,6 +76,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthProfileRoute
   '/admin/desas': typeof AuthAdminDesasRoute
   '/admin/rts': typeof AuthAdminRtsRoute
+  '/admin/settings': typeof AuthAdminSettingsRoute
   '/admin/users': typeof AuthAdminUsersRoute
   '/cameras/$cameraId': typeof AuthCamerasCameraIdRoute
   '/cameras/': typeof AuthCamerasIndexRoute
@@ -80,6 +87,7 @@ export interface FileRoutesByTo {
   '/': typeof AuthIndexRoute
   '/admin/desas': typeof AuthAdminDesasRoute
   '/admin/rts': typeof AuthAdminRtsRoute
+  '/admin/settings': typeof AuthAdminSettingsRoute
   '/admin/users': typeof AuthAdminUsersRoute
   '/cameras/$cameraId': typeof AuthCamerasCameraIdRoute
   '/cameras': typeof AuthCamerasIndexRoute
@@ -92,6 +100,7 @@ export interface FileRoutesById {
   '/_auth/': typeof AuthIndexRoute
   '/_auth/admin/desas': typeof AuthAdminDesasRoute
   '/_auth/admin/rts': typeof AuthAdminRtsRoute
+  '/_auth/admin/settings': typeof AuthAdminSettingsRoute
   '/_auth/admin/users': typeof AuthAdminUsersRoute
   '/_auth/cameras/$cameraId': typeof AuthCamerasCameraIdRoute
   '/_auth/cameras/': typeof AuthCamerasIndexRoute
@@ -104,6 +113,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/admin/desas'
     | '/admin/rts'
+    | '/admin/settings'
     | '/admin/users'
     | '/cameras/$cameraId'
     | '/cameras/'
@@ -114,6 +124,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin/desas'
     | '/admin/rts'
+    | '/admin/settings'
     | '/admin/users'
     | '/cameras/$cameraId'
     | '/cameras'
@@ -125,6 +136,7 @@ export interface FileRouteTypes {
     | '/_auth/'
     | '/_auth/admin/desas'
     | '/_auth/admin/rts'
+    | '/_auth/admin/settings'
     | '/_auth/admin/users'
     | '/_auth/cameras/$cameraId'
     | '/_auth/cameras/'
@@ -186,6 +198,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAdminUsersRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_auth/admin/settings': {
+      id: '/_auth/admin/settings'
+      path: '/admin/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AuthAdminSettingsRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_auth/admin/rts': {
       id: '/_auth/admin/rts'
       path: '/admin/rts'
@@ -208,6 +227,7 @@ interface AuthRouteChildren {
   AuthIndexRoute: typeof AuthIndexRoute
   AuthAdminDesasRoute: typeof AuthAdminDesasRoute
   AuthAdminRtsRoute: typeof AuthAdminRtsRoute
+  AuthAdminSettingsRoute: typeof AuthAdminSettingsRoute
   AuthAdminUsersRoute: typeof AuthAdminUsersRoute
   AuthCamerasCameraIdRoute: typeof AuthCamerasCameraIdRoute
   AuthCamerasIndexRoute: typeof AuthCamerasIndexRoute
@@ -218,6 +238,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthIndexRoute: AuthIndexRoute,
   AuthAdminDesasRoute: AuthAdminDesasRoute,
   AuthAdminRtsRoute: AuthAdminRtsRoute,
+  AuthAdminSettingsRoute: AuthAdminSettingsRoute,
   AuthAdminUsersRoute: AuthAdminUsersRoute,
   AuthCamerasCameraIdRoute: AuthCamerasCameraIdRoute,
   AuthCamerasIndexRoute: AuthCamerasIndexRoute,

@@ -11,6 +11,14 @@ CREATE TABLE "activity_logs" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "app_settings" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"key" varchar(100) NOT NULL,
+	"value" text,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "app_settings_key_unique" UNIQUE("key")
+);
+--> statement-breakpoint
 CREATE TABLE "cameras" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"rt_id" uuid NOT NULL,
@@ -39,6 +47,20 @@ CREATE TABLE "login_attempts" (
 	"ip_address" varchar(45) NOT NULL,
 	"success" boolean NOT NULL,
 	"user_agent" varchar(500),
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "monitoring_endpoints" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"name" varchar(255) NOT NULL,
+	"url" varchar(500) NOT NULL,
+	"method" varchar(10) DEFAULT 'GET' NOT NULL,
+	"expected_status" integer DEFAULT 200 NOT NULL,
+	"interval_seconds" integer DEFAULT 60 NOT NULL,
+	"is_active" boolean DEFAULT true NOT NULL,
+	"last_status" integer,
+	"last_response_ms" integer,
+	"last_checked_at" timestamp with time zone,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint

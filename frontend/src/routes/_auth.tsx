@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
   User,
+  Settings,
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -49,6 +50,7 @@ function AuthLayout() {
     { to: '/admin/desas' as const, icon: MapPin, label: 'Kelola Desa', roles: ['superadmin'] },
     { to: '/admin/rts' as const, icon: Building, label: 'Kelola RT', roles: ['superadmin'] },
     { to: '/admin/users' as const, icon: Users, label: 'Kelola User', roles: ['superadmin'] },
+    { to: '/admin/settings' as const, icon: Settings, label: 'Pengaturan', roles: ['superadmin'] },
   ];
 
   const filteredNavItems = navItems.filter((item) =>

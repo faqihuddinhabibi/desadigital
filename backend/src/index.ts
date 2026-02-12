@@ -13,6 +13,7 @@ import { desasRouter } from './modules/desas/desas.controller.js';
 import { rtsRouter } from './modules/rts/rts.controller.js';
 import { camerasRouter } from './modules/cameras/cameras.controller.js';
 import { dashboardRouter } from './modules/dashboard/dashboard.controller.js';
+import { settingsRouter } from './modules/settings/settings.controller.js';
 
 const app = express();
 
@@ -47,6 +48,7 @@ app.use('/api/desas', desasRouter);
 app.use('/api/rts', rtsRouter);
 app.use('/api/cameras', camerasRouter);
 app.use('/api/dashboard', dashboardRouter);
+app.use('/api/settings', settingsRouter);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
