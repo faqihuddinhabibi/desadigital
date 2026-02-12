@@ -377,23 +377,19 @@ function DomainSettings() {
         </Tutorial>
 
         <Tutorial title="Tutorial: SSL Gratis & Otomatis (Let's Encrypt)">
-          <p>SSL sudah <b>gratis dan otomatis</b> dengan Let's Encrypt. Caranya:</p>
+          <p>SSL <b>full otomatis</b> — cukup isi environment variable di Portainer, tidak perlu terminal.</p>
           <p><b>1.</b> Pastikan domain sudah diarahkan ke IP server (lihat tutorial DNS di atas)</p>
           <p><b>2.</b> Pastikan port <code>80</code> dan <code>443</code> terbuka di firewall</p>
           <p><b>3.</b> Pilih <b>Let's Encrypt</b> di form SSL di atas, lalu simpan</p>
-          <p><b>4.</b> Di Proxmox → klik container <code>desa-digital</code> → <b>Console</b>, lalu jalankan:</p>
+          <p><b>4.</b> Di Portainer → Stacks → <code>desa-digital</code> → <b>Environment variables</b>, tambah/ubah:</p>
           <div className="bg-muted p-2 rounded font-mono text-xs mt-1">
-            <p>cd /data/compose/&lt;ID_STACK&gt;</p>
-            <p>bash scripts/setup-ssl.sh {domain || 'cctv.desaanda.com'} admin@email.com</p>
+            <p>SSL_DOMAIN={domain || 'cctv.desaanda.com'}</p>
+            <p>SSL_EMAIL=admin@email.com</p>
+            <p>CORS_ORIGIN=https://{domain || 'cctv.desaanda.com'}</p>
           </div>
-          <p className="text-xs text-muted-foreground mt-1"><b>Mencari folder stack:</b> Di Portainer → Stacks → <code>desa-digital</code> → lihat path di bagian atas halaman.</p>
-          <p className="mt-2">Script otomatis mendeteksi project name, lalu menjalankan: request sertifikat → update config Nginx (HTTP/2) → reload Nginx → start auto-renewal.</p>
-          <p className="mt-1"><b>5.</b> Di Portainer → Stacks → <code>desa-digital</code> → <b>Editor</b> → update environment:</p>
-          <div className="bg-muted p-2 rounded font-mono text-xs mt-1">
-            CORS_ORIGIN=https://{domain || 'cctv.desaanda.com'}
-          </div>
-          <p className="mt-1"><b>6.</b> Klik <b>Update the stack</b></p>
-          <p className="mt-2 text-xs text-muted-foreground">Sertifikat diperpanjang otomatis oleh Certbot. Nginx reload otomatis setiap 6 jam untuk memuat sertifikat baru.</p>
+          <p className="mt-1"><b>5.</b> Klik <b>Update the stack</b></p>
+          <p className="mt-1"><b>6.</b> Tunggu 1–2 menit — nginx otomatis request sertifikat</p>
+          <p className="mt-2 text-xs text-muted-foreground">Sertifikat di-request otomatis saat nginx start. Jika DNS belum siap, retry otomatis setiap 5 menit. Auto-renewal berjalan setiap 12 jam.</p>
         </Tutorial>
 
         <Tutorial title="Tutorial: Cloudflare Tunnel (Tanpa Buka Port)">

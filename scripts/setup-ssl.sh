@@ -1,5 +1,10 @@
 #!/bin/bash
-# Setup SSL for Desa Digital
+# Setup SSL for Desa Digital (Manual Fallback)
+#
+# RECOMMENDED: Use auto-SSL instead — just set SSL_DOMAIN and SSL_EMAIL
+# environment variables in Portainer. No terminal needed.
+#
+# This script is a manual fallback if auto-SSL doesn't work for your setup.
 # Usage: ./scripts/setup-ssl.sh <domain> <email>
 
 set -e

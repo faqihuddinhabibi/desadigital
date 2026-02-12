@@ -10,7 +10,7 @@
 
 **"More Than Internet—A True Partner"**
 
-Sistem Monitoring CCTV untuk desa. Deploy 100% lewat GUI — **tidak perlu ketik command di terminal**. Cukup pakai Proxmox + Portainer.
+Sistem Monitoring CCTV untuk desa. Deploy 100% lewat GUI — **tidak perlu ketik command di terminal**. SSL otomatis, cukup pakai Proxmox + Portainer.
 
 ---
 
@@ -22,7 +22,7 @@ Sistem Monitoring CCTV untuk desa. Deploy 100% lewat GUI — **tidak perlu ketik
 4. [Install Docker & Portainer (Satu Kali)](#-install-docker--portainer-satu-kali)
 5. [Deploy via Portainer GUI](#-deploy-via-portainer-gui)
 6. [Akun Superadmin & Login](#-akun-superadmin--login)
-7. [Domain & SSL Gratis (via UI)](#-domain--ssl-gratis-via-ui)
+7. [Domain & SSL Gratis (Full GUI)](#-domain--ssl-gratis-full-gui)
 8. [Cloudflare Tunnel (via UI)](#-cloudflare-tunnel-via-ui)
 9. [Bot Telegram (via UI)](#-bot-telegram-via-ui)
 10. [Backup & Restore Database](#-backup--restore-database)
@@ -40,7 +40,7 @@ Sistem Monitoring CCTV untuk desa. Deploy 100% lewat GUI — **tidak perlu ketik
 - 🏘️ **Multi-Desa & Multi-RT** — Satu sistem untuk banyak desa
 - 👥 **Role-Based Access** — Superadmin, Admin RT, Warga
 - 🖥️ **Full GUI Deploy** — Deploy & kelola semuanya lewat browser, tanpa terminal
-- 🔒 **SSL Gratis & Otomatis** — Let's Encrypt atau Cloudflare Tunnel
+- 🔒 **SSL Gratis & Full Otomatis** — Let's Encrypt (cukup isi env var) atau Cloudflare Tunnel
 - 🤖 **Bot Telegram** — Notifikasi kamera offline/online + backup harian
 - 💾 **Auto Backup** — Database di-backup otomatis setiap hari jam 02:00
 - 🎨 **Logo & Branding** — Ganti logo & nama aplikasi dari menu Pengaturan
@@ -205,56 +205,66 @@ Jika `SEED_DEMO_DATA=true`, akan dibuat juga:
 
 ---
 
-## 🌐 Domain & SSL Gratis (via UI)
+## 🌐 Domain & SSL Gratis (Full GUI)
 
-Semua pengaturan domain dan SSL bisa dilakukan dari **dalam aplikasi**.
+SSL Let's Encrypt sekarang **full otomatis** — cukup isi environment variable, tidak perlu terminal sama sekali.
 
-1. Login sebagai Superadmin
-2. Buka menu **Pengaturan** → tab **Domain & SSL**
-3. Masukkan domain Anda (contoh: `cctv.desaanda.com`)
-4. Pilih metode SSL:
-   - **Let's Encrypt** — SSL gratis otomatis (perlu buka port 80/443)
-   - **Cloudflare Tunnel** — SSL tanpa buka port
-5. Klik **Simpan**
+### Langkah 1: Setting DNS
 
-> Di halaman yang sama ada **tutorial langkah demi langkah** (klik untuk expand):
-> - Tutorial Setting DNS
-> - Tutorial SSL Let's Encrypt
-> - Tutorial Cloudflare Tunnel
-
-### Ringkasan DNS
-
-Di panel DNS registrar domain Anda, buat:
+Di panel DNS registrar domain Anda, buat record:
 
 | Type | Name | Value |
 |------|------|-------|
 | A | @ | IP Server |
 | A | www | IP Server |
 
-### Let's Encrypt — Setup SSL
+> **Cek propagasi:** https://dnschecker.org — tunggu sampai A record resolve ke IP server Anda.
 
-> **Ini satu-satunya langkah tambahan yang perlu terminal** (selain install Docker).
+### Langkah 2: Aktifkan SSL via Portainer
 
-1. Di Proxmox → klik container `desa-digital` → **Console**, lalu jalankan:
+1. Di Portainer → **Stacks** → `desa-digital` → scroll ke **Environment variables**
+2. Tambah/ubah variable berikut:
+
+```env
+SSL_DOMAIN=cctv.desaanda.com
+SSL_EMAIL=admin@email.com
+CORS_ORIGIN=https://cctv.desaanda.com
+```
+
+3. Klik **Update the stack**
+4. Tunggu 1–2 menit — nginx otomatis request sertifikat dari Let's Encrypt
+
+> **Apa yang terjadi otomatis:**
+> 1. Nginx start → deteksi `SSL_DOMAIN`
+> 2. Request sertifikat Let's Encrypt (HTTP challenge)
+> 3. Konfigurasi Nginx beralih ke HTTPS + HTTP/2
+> 4. Auto-renewal berjalan setiap 12 jam
+>
+> Jika DNS belum siap, nginx tetap jalan di HTTP dan **retry otomatis setiap 5 menit** sampai sertifikat berhasil didapat.
+
+### Langkah 3: Buka Aplikasi
+
+Buka browser: `https://cctv.desaanda.com`
+
+> **Auto-renewal:** Sertifikat diperpanjang otomatis oleh Certbot di dalam container nginx. Tidak perlu container atau service tambahan.
+
+<details>
+<summary><b>Manual Fallback (via Terminal)</b> — jika auto-SSL tidak cocok</summary>
+
+Jika memilih setup manual, bisa gunakan script:
 
 ```bash
 cd /data/compose/<ID_STACK>   # folder stack Portainer
 bash scripts/setup-ssl.sh cctv.desaanda.com admin@email.com
 ```
 
-> **Mencari folder stack:** Di Portainer → **Stacks** → `desa-digital` → lihat path di bagian atas halaman, biasanya `/data/compose/<ID_STACK>`.
+> **Mencari folder stack:** Di Portainer → **Stacks** → `desa-digital` → lihat path di bagian atas halaman.
 
-Script otomatis mendeteksi project name dari container yang sedang berjalan, lalu menjalankan 4 langkah:
-1. Request sertifikat dari Let's Encrypt (via HTTP challenge)
-2. Update konfigurasi Nginx ke HTTPS (dengan HTTP/2)
-3. Reload Nginx dengan SSL aktif
-4. Start Certbot auto-renewal (perpanjang otomatis setiap 12 jam)
+Script otomatis mendeteksi project name, lalu: request sertifikat → update config Nginx (HTTP/2) → reload Nginx → start auto-renewal.
 
-2. Setelah script selesai, update environment: di Portainer → **Stacks** → `desa-digital` → scroll ke **Environment variables** → ubah:
-   - `CORS_ORIGIN=https://cctv.desaanda.com`
-3. Klik **Update the stack**
+Setelah selesai, update `CORS_ORIGIN=https://cctv.desaanda.com` di Portainer → **Update the stack**.
 
-> **Auto-renewal:** Sertifikat diperpanjang otomatis oleh Certbot. Nginx juga otomatis reload setiap 6 jam untuk memuat sertifikat baru.
+</details>
 
 ---
 
