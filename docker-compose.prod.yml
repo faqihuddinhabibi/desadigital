@@ -63,8 +63,8 @@ services:
       - "80:80"
       - "443:443"
     environment:
-      SSL_DOMAIN: ${SSL_DOMAIN:-}
-      SSL_EMAIL: ${SSL_EMAIL:-}
+      - SSL_DOMAIN
+      - SSL_EMAIL
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d
       - certs_data:/etc/nginx/certs
@@ -105,12 +105,12 @@ services:
     container_name: desa-digital-backup
     restart: unless-stopped
     environment:
-      PGHOST: postgres
-      PGUSER: ${POSTGRES_USER:-postgres}
-      PGPASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      PGDATABASE: ${POSTGRES_DB:-desa_digital}
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
-      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+      - PGHOST=postgres
+      - PGUSER=${POSTGRES_USER:-postgres}
+      - PGPASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - PGDATABASE=${POSTGRES_DB:-desa_digital}
+      - TELEGRAM_BOT_TOKEN
+      - TELEGRAM_CHAT_ID
     volumes:
       - backups_data:/backups
     depends_on:
@@ -124,7 +124,7 @@ services:
     restart: unless-stopped
     volumes:
       - streams_data:/streams
-    entrypoint: /bin/bash
+    entrypoint: /bin/sh
     command: -c "echo 'FFmpeg relay ready.' && tail -f /dev/null"
 
 volumes:
