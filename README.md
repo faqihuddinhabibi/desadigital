@@ -238,16 +238,23 @@ Di panel DNS registrar domain Anda, buat:
 1. Di Proxmox → klik container `desa-digital` → **Console**, lalu jalankan:
 
 ```bash
-cd /opt/stacks/desa-digital   # atau folder tempat repo di-clone
+cd /data/compose/<ID_STACK>   # folder stack Portainer (lihat catatan di bawah)
 bash scripts/setup-ssl.sh cctv.desaanda.com admin@email.com
 ```
 
-> Jika deploy via Portainer dari Git, folder stack biasanya di `/data/compose/<ID_STACK>`.
+> **Mencari folder stack:** Di Portainer → **Stacks** → `desa-digital` → lihat path di bagian atas halaman, biasanya `/data/compose/<ID_STACK>`.
 
-2. SSL akan otomatis aktif dan diperpanjang setiap 12 jam oleh Certbot
-3. Update environment: di Portainer → **Stacks** → `desa-digital` → scroll ke **Environment variables** → ubah:
+Script ini otomatis menjalankan 4 langkah:
+1. Request sertifikat dari Let's Encrypt (via HTTP challenge)
+2. Update konfigurasi Nginx ke HTTPS
+3. Reload Nginx dengan SSL aktif
+4. Start Certbot auto-renewal (perpanjang otomatis setiap 12 jam)
+
+2. Setelah script selesai, update environment: di Portainer → **Stacks** → `desa-digital` → scroll ke **Environment variables** → ubah:
    - `CORS_ORIGIN=https://cctv.desaanda.com`
-4. Klik **Update the stack**
+3. Klik **Update the stack**
+
+> **Auto-renewal:** Sertifikat diperpanjang otomatis oleh Certbot. Nginx juga otomatis reload setiap 6 jam untuk memuat sertifikat baru.
 
 ---
 

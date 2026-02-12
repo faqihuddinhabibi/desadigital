@@ -63,6 +63,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
       - certs_data:/etc/nginx/certs
       - certbot_data:/var/www/certbot
     depends_on:

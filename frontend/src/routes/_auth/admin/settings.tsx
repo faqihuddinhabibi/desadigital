@@ -383,16 +383,17 @@ function DomainSettings() {
           <p><b>3.</b> Pilih <b>Let's Encrypt</b> di form SSL di atas, lalu simpan</p>
           <p><b>4.</b> Di Proxmox → klik container <code>desa-digital</code> → <b>Console</b>, lalu jalankan:</p>
           <div className="bg-muted p-2 rounded font-mono text-xs mt-1">
-            <p>cd /opt/stacks/desa-digital</p>
+            <p>cd /data/compose/&lt;ID_STACK&gt;</p>
             <p>bash scripts/setup-ssl.sh {domain || 'cctv.desaanda.com'} admin@email.com</p>
           </div>
-          <p className="text-xs text-muted-foreground mt-1">Jika menggunakan Portainer dari Git, folder stack biasanya di <code>/data/compose/</code> + ID stack. Bisa juga clone repo lalu jalankan script.</p>
-          <p className="mt-2"><b>5.</b> SSL akan otomatis diperpanjang setiap 12 jam oleh Certbot</p>
-          <p className="mt-1"><b>6.</b> Di Portainer → Stacks → <code>desa-digital</code> → <b>Editor</b> → update environment:</p>
+          <p className="text-xs text-muted-foreground mt-1"><b>Mencari folder stack:</b> Di Portainer → Stacks → <code>desa-digital</code> → lihat path di bagian atas halaman.</p>
+          <p className="mt-2">Script otomatis menjalankan: request sertifikat → update config Nginx → reload Nginx → start auto-renewal.</p>
+          <p className="mt-1"><b>5.</b> Di Portainer → Stacks → <code>desa-digital</code> → <b>Editor</b> → update environment:</p>
           <div className="bg-muted p-2 rounded font-mono text-xs mt-1">
             CORS_ORIGIN=https://{domain || 'cctv.desaanda.com'}
           </div>
-          <p className="mt-1"><b>7.</b> Klik <b>Update the stack</b></p>
+          <p className="mt-1"><b>6.</b> Klik <b>Update the stack</b></p>
+          <p className="mt-2 text-xs text-muted-foreground">Sertifikat diperpanjang otomatis oleh Certbot. Nginx reload otomatis setiap 6 jam untuk memuat sertifikat baru.</p>
         </Tutorial>
 
         <Tutorial title="Tutorial: Cloudflare Tunnel (Tanpa Buka Port)">
