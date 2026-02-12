@@ -16,6 +16,7 @@ import { rtsRouter } from './modules/rts/rts.controller.js';
 import { camerasRouter } from './modules/cameras/cameras.controller.js';
 import { dashboardRouter } from './modules/dashboard/dashboard.controller.js';
 import { settingsRouter } from './modules/settings/settings.controller.js';
+import { uploadsRouter } from './modules/uploads/uploads.controller.js';
 
 const app = express();
 const httpServer = createServer(app);
@@ -52,6 +53,7 @@ app.use('/api/rts', rtsRouter);
 app.use('/api/cameras', camerasRouter);
 app.use('/api/dashboard', dashboardRouter);
 app.use('/api/settings', settingsRouter);
+app.use('/api/uploads', uploadsRouter);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

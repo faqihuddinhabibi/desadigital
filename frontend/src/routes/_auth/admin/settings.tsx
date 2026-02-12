@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../../lib/api';
 import { useState, useEffect } from 'react';
 import { Save, Loader2, Send, Plus, Trash2, Play, RefreshCw, Globe, Shield, Bot, Activity, CheckCircle2, XCircle, Clock, Image, BookOpen, ChevronDown, ChevronUp, Bell } from 'lucide-react';
+import { ImageUpload } from '../../../components/ImageUpload';
 
 export const Route = createFileRoute('/_auth/admin/settings')({
   component: SettingsPage,
@@ -154,28 +155,18 @@ function BrandingSettings() {
             <input type="text" value={siteSubtitle} onChange={(e) => setSiteSubtitle(e.target.value)} placeholder="BY FIBERNODE INTERNET" className="input mt-1" />
             <p className="text-xs text-muted-foreground mt-1">Ditampilkan di bawah nama aplikasi pada header RT/Warga dan watermark kamera</p>
           </div>
-          <div>
-            <label className="text-sm font-medium">URL Logo (Header & Sidebar)</label>
-            <input type="url" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="https://example.com/logo.png" className="input mt-1" />
-            <p className="text-xs text-muted-foreground mt-1">Gunakan URL gambar PNG/SVG transparan. Ukuran rekomendasi: 200x200px</p>
-            {logoUrl && (
-              <div className="mt-2 p-3 bg-muted/50 rounded-lg inline-flex items-center gap-3">
-                <img src={logoUrl} alt="Preview" className="w-12 h-12 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                <span className="text-xs text-muted-foreground">Preview Logo</span>
-              </div>
-            )}
-          </div>
-          <div>
-            <label className="text-sm font-medium">URL Logo Splash Screen</label>
-            <input type="url" value={splashLogoUrl} onChange={(e) => setSplashLogoUrl(e.target.value)} placeholder="https://example.com/splash-logo.png" className="input mt-1" />
-            <p className="text-xs text-muted-foreground mt-1">Opsional. Jika kosong, akan menggunakan logo utama di atas</p>
-            {splashLogoUrl && (
-              <div className="mt-2 p-3 bg-muted/50 rounded-lg inline-flex items-center gap-3">
-                <img src={splashLogoUrl} alt="Preview" className="w-16 h-16 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                <span className="text-xs text-muted-foreground">Preview Splash</span>
-              </div>
-            )}
-          </div>
+          <ImageUpload
+            value={logoUrl}
+            onChange={setLogoUrl}
+            label="Logo (Header & Sidebar)"
+            hint="Upload gambar PNG/SVG transparan. Ukuran rekomendasi: 200x200px"
+          />
+          <ImageUpload
+            value={splashLogoUrl}
+            onChange={setSplashLogoUrl}
+            label="Logo Splash Screen"
+            hint="Opsional. Jika kosong, akan menggunakan logo utama di atas"
+          />
         </div>
       </div>
 
@@ -186,28 +177,20 @@ function BrandingSettings() {
           Favicon & Thumbnail
         </h3>
         <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium">URL Favicon</label>
-            <input type="url" value={faviconUrl} onChange={(e) => setFaviconUrl(e.target.value)} placeholder="https://example.com/favicon.png" className="input mt-1" />
-            <p className="text-xs text-muted-foreground mt-1">Ikon kecil di tab browser. Format: PNG, SVG, atau ICO. Ukuran: 32x32 atau 64x64px</p>
-            {faviconUrl && (
-              <div className="mt-2 p-3 bg-muted/50 rounded-lg inline-flex items-center gap-3">
-                <img src={faviconUrl} alt="Favicon" className="w-8 h-8 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                <span className="text-xs text-muted-foreground">Preview Favicon</span>
-              </div>
-            )}
-          </div>
-          <div>
-            <label className="text-sm font-medium">URL OG Image (Social Media Thumbnail)</label>
-            <input type="url" value={ogImageUrl} onChange={(e) => setOgImageUrl(e.target.value)} placeholder="https://example.com/og-image.png" className="input mt-1" />
-            <p className="text-xs text-muted-foreground mt-1">Gambar yang muncul saat link dibagikan di WhatsApp, Facebook, Twitter, dll. Ukuran: 1200x630px</p>
-            {ogImageUrl && (
-              <div className="mt-2 p-3 bg-muted/50 rounded-lg inline-block">
-                <img src={ogImageUrl} alt="OG Image" className="w-64 h-auto rounded object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                <p className="text-xs text-muted-foreground mt-1">Preview OG Image</p>
-              </div>
-            )}
-          </div>
+          <ImageUpload
+            value={faviconUrl}
+            onChange={setFaviconUrl}
+            label="Favicon"
+            hint="Ikon kecil di tab browser. Format: PNG, SVG, atau ICO. Ukuran: 32x32 atau 64x64px"
+            previewSize="sm"
+          />
+          <ImageUpload
+            value={ogImageUrl}
+            onChange={setOgImageUrl}
+            label="OG Image (Social Media Thumbnail)"
+            hint="Gambar yang muncul saat link dibagikan di WhatsApp, Facebook, Twitter, dll. Ukuran: 1200x630px"
+            previewSize="lg"
+          />
         </div>
       </div>
 

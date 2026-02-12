@@ -127,6 +127,42 @@ class ApiClient {
   delete<T>(endpoint: string, options?: RequestOptions) {
     return this.request<T>(endpoint, { ...options, method: 'DELETE' });
   }
+
+  async upload<T>(endpoint: string, formData: FormData): Promise<T> {
+    const headers: Record<string, string> = {};
+    if (this.accessToken) {
+      headers['Authorization'] = `Bearer ${this.accessToken}`;
+    }
+
+    let response = await fetch(`${API_BASE}${endpoint}`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    if (response.status === 401 && this.refreshToken) {
+      try {
+        await this.refreshAccessToken();
+        headers['Authorization'] = `Bearer ${this.accessToken}`;
+        response = await fetch(`${API_BASE}${endpoint}`, {
+          method: 'POST',
+          headers,
+          body: formData,
+        });
+      } catch {
+        this.clearTokens();
+        window.location.href = '/login';
+        throw new Error('Session expired');
+      }
+    }
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Upload failed' }));
+      throw new Error(error.error || 'Upload failed');
+    }
+
+    return response.json();
+  }
 }
 
 export const api = new ApiClient();

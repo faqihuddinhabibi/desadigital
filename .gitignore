@@ -44,6 +44,9 @@ coverage/
 streams/
 *.m3u8
 
+# Uploaded files
+backend/uploads/
+
 # Docker
 docker/volumes/
 
