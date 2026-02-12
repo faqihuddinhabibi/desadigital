@@ -266,19 +266,52 @@ function DomainSettings() {
 
   if (isLoading) return <div className="card p-8 text-center text-muted-foreground">Memuat...</div>;
 
+  const protocol = sslMethod !== 'none' ? 'https' : 'http';
+  const fullUrl = domain ? `${protocol}://${domain}` : null;
+
   return (
     <div className="space-y-6">
       <div className="card">
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <Globe className="h-5 w-5" />
-          Domain
+          Domain Sistem
         </h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Satu domain untuk seluruh sistem: frontend, backend API, WebSocket, dan CCTV streams. Semua terhubung melalui Nginx reverse proxy.
+        </p>
         <div className="space-y-4">
           <div>
             <label className="text-sm font-medium">Domain</label>
             <input type="text" value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="cctv.desaanda.com" className="input mt-1" />
             <p className="text-xs text-muted-foreground mt-1">Arahkan DNS A record ke IP server Anda, atau gunakan Cloudflare Tunnel</p>
           </div>
+
+          {fullUrl && (
+            <div className="p-3 rounded-lg bg-muted/50 text-sm space-y-1.5">
+              <p className="font-medium text-xs text-muted-foreground uppercase tracking-wider mb-2">Routing (Nginx Reverse Proxy)</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs font-mono">
+                <div className="flex items-center gap-2 p-1.5 rounded bg-background">
+                  <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary font-semibold">FE</span>
+                  <span className="text-muted-foreground">{fullUrl}/</span>
+                </div>
+                <div className="flex items-center gap-2 p-1.5 rounded bg-background">
+                  <span className="px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-600 font-semibold">API</span>
+                  <span className="text-muted-foreground">{fullUrl}/api/</span>
+                </div>
+                <div className="flex items-center gap-2 p-1.5 rounded bg-background">
+                  <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 font-semibold">WS</span>
+                  <span className="text-muted-foreground">{fullUrl}/ws/</span>
+                </div>
+                <div className="flex items-center gap-2 p-1.5 rounded bg-background">
+                  <span className="px-1.5 py-0.5 rounded bg-green-500/10 text-green-600 font-semibold">HLS</span>
+                  <span className="text-muted-foreground">{fullUrl}/streams/</span>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Pastikan <code className="px-1 py-0.5 bg-muted rounded">CORS_ORIGIN={fullUrl}</code> di environment backend.
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -287,6 +320,9 @@ function DomainSettings() {
           <Shield className="h-5 w-5" />
           SSL / HTTPS
         </h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          HTTPS diperlukan untuk PWA, Service Worker, dan keamanan koneksi API + WebSocket.
+        </p>
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {[
@@ -347,9 +383,13 @@ function DomainSettings() {
           <p><b>3.</b> Pilih <b>Let's Encrypt</b> di form SSL di atas, lalu simpan</p>
           <p><b>4.</b> Jalankan di server:</p>
           <div className="bg-muted p-2 rounded font-mono text-xs mt-1">
-            ./scripts/setup-ssl.sh cctv.desaanda.com admin@email.com
+            ./scripts/setup-ssl.sh {domain || 'cctv.desaanda.com'} admin@email.com
           </div>
           <p className="mt-2"><b>5.</b> SSL akan otomatis diperpanjang setiap 12 jam oleh Certbot</p>
+          <p className="mt-1"><b>6.</b> Update environment backend:</p>
+          <div className="bg-muted p-2 rounded font-mono text-xs mt-1">
+            CORS_ORIGIN=https://{domain || 'cctv.desaanda.com'}
+          </div>
         </Tutorial>
 
         <Tutorial title="Tutorial: Cloudflare Tunnel (Tanpa Buka Port)">
@@ -362,9 +402,13 @@ function DomainSettings() {
           <p><b>7.</b> Paste token di form di atas, lalu simpan</p>
           <p><b>8.</b> Di konfigurasi tunnel, tambahkan Public Hostname:</p>
           <div className="bg-muted p-2 rounded font-mono text-xs mt-1">
-            <p>Domain: cctv.desaanda.com → http://nginx-proxy:80</p>
+            <p>Domain: {domain || 'cctv.desaanda.com'} → http://nginx-proxy:80</p>
           </div>
-          <p className="mt-2"><b>9.</b> Jalankan Docker dengan profile cloudflare:</p>
+          <p className="mt-2"><b>9.</b> Update environment backend:</p>
+          <div className="bg-muted p-2 rounded font-mono text-xs mt-1">
+            CORS_ORIGIN=https://{domain || 'cctv.desaanda.com'}
+          </div>
+          <p className="mt-2"><b>10.</b> Jalankan Docker dengan profile cloudflare:</p>
           <div className="bg-muted p-2 rounded font-mono text-xs mt-1">
             docker compose -f docker-compose.prod.yml --profile cloudflare up -d
           </div>
