@@ -1,7 +1,8 @@
 # Desa Digital by Fibernode
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Docker-One_Command-blue?style=flat-square&logo=docker" alt="Docker" />
+  <img src="https://img.shields.io/badge/Docker-GUI_Deploy-blue?style=flat-square&logo=docker" alt="Docker" />
+  <img src="https://img.shields.io/badge/Portainer-Full_GUI-13BEF9?style=flat-square&logo=portainer" alt="Portainer" />
   <img src="https://img.shields.io/badge/SSL-Free_&_Auto-green?style=flat-square&logo=letsencrypt" alt="SSL" />
   <img src="https://img.shields.io/badge/Proxmox-Ready-orange?style=flat-square&logo=proxmox" alt="Proxmox" />
   <img src="https://img.shields.io/badge/Telegram-Alerts-blue?style=flat-square&logo=telegram" alt="Telegram" />
@@ -9,7 +10,7 @@
 
 **"More Than Internet—A True Partner"**
 
-Sistem Monitoring CCTV untuk pengelolaan dan pemantauan kamera keamanan di lingkungan desa. Cukup jalankan **satu perintah Docker** dan semua langsung berjalan.
+Sistem Monitoring CCTV untuk desa. Deploy 100% lewat GUI — **tidak perlu ketik command di terminal**. Cukup pakai Proxmox + Portainer.
 
 ---
 
@@ -17,35 +18,36 @@ Sistem Monitoring CCTV untuk pengelolaan dan pemantauan kamera keamanan di lingk
 
 1. [Fitur Utama](#-fitur-utama)
 2. [Arsitektur & Port](#-arsitektur--port)
-3. [Instalasi di Proxmox (Docker LXC)](#-instalasi-di-proxmox-docker-lxc)
-4. [Konfigurasi Environment (.env)](#-konfigurasi-environment-env)
-5. [Menjalankan Aplikasi](#-menjalankan-aplikasi)
-6. [Akun Superadmin](#-akun-superadmin)
-7. [Domain Custom & SSL Gratis](#-domain-custom--ssl-gratis)
-8. [Cloudflare Tunnel (Tanpa Buka Port)](#-cloudflare-tunnel-tanpa-buka-port)
-9. [Bot Telegram (Notifikasi)](#-bot-telegram-notifikasi)
+3. [Persiapan: Buat LXC di Proxmox](#-persiapan-buat-lxc-di-proxmox)
+4. [Install Docker & Portainer (Satu Kali)](#-install-docker--portainer-satu-kali)
+5. [Deploy via Portainer GUI](#-deploy-via-portainer-gui)
+6. [Akun Superadmin & Login](#-akun-superadmin--login)
+7. [Domain & SSL Gratis (via UI)](#-domain--ssl-gratis-via-ui)
+8. [Cloudflare Tunnel (via UI)](#-cloudflare-tunnel-via-ui)
+9. [Bot Telegram (via UI)](#-bot-telegram-via-ui)
 10. [Backup & Restore Database](#-backup--restore-database)
-11. [Logo & Branding](#-logo--branding)
+11. [Logo & Branding (via UI)](#-logo--branding-via-ui)
 12. [Menambahkan Kamera CCTV](#-menambahkan-kamera-cctv)
-13. [Troubleshooting](#-troubleshooting)
-14. [Kontak Support](#-kontak-support)
+13. [Manajemen via Portainer GUI](#-manajemen-via-portainer-gui)
+14. [Troubleshooting](#-troubleshooting)
+15. [Kontak Support](#-kontak-support)
 
 ---
 
 ## ✨ Fitur Utama
 
-- 📹 **Live Streaming CCTV** — Pantau kamera real-time dengan HLS
-- 🏘️ **Multi-Desa & Multi-RT** — Kelola banyak desa/RT dalam satu sistem
+- 📹 **Live Streaming CCTV** — Pantau kamera real-time via HLS
+- 🏘️ **Multi-Desa & Multi-RT** — Satu sistem untuk banyak desa
 - 👥 **Role-Based Access** — Superadmin, Admin RT, Warga
-- 🌓 **Dark/Light Mode** — Nyaman di berbagai kondisi
-- 📱 **PWA & Responsive** — Bisa di-install di HP
-- 🔒 **SSL Otomatis & Gratis** — Let's Encrypt atau Cloudflare Tunnel
+- 🖥️ **Full GUI Deploy** — Deploy & kelola semuanya lewat browser, tanpa terminal
+- 🔒 **SSL Gratis & Otomatis** — Let's Encrypt atau Cloudflare Tunnel
 - 🤖 **Bot Telegram** — Notifikasi kamera offline/online + backup harian
-- 💾 **Auto Backup** — Database di-backup otomatis setiap hari
-- 🎨 **Logo & Branding** — Ganti logo dan nama aplikasi dari menu setting
+- 💾 **Auto Backup** — Database di-backup otomatis setiap hari jam 02:00
+- 🎨 **Logo & Branding** — Ganti logo & nama aplikasi dari menu Pengaturan
 - 🖥️ **Splash Screen** — 3 detik loading screen dengan logo custom
-- 📊 **Monitoring Dashboard** — Pantau kesehatan sistem & HTTP endpoints
-- 🐳 **One Command Deploy** — Cukup `docker compose up -d`
+- 📊 **Monitoring** — Pantau kesehatan sistem & HTTP endpoints
+- � **PWA & Responsive** — Bisa di-install di HP
+- 🌓 **Dark/Light Mode**
 
 ---
 
@@ -54,353 +56,217 @@ Sistem Monitoring CCTV untuk pengelolaan dan pemantauan kamera keamanan di lingk
 ```
 Internet
    │
-   ├─ Port 80/443 ──▶ Nginx Proxy ──▶ Frontend (React) :3000
-   │                        │
-   │                        └────────▶ Backend API (Express) :4000
+   ├─ Port 80/443 ───▶ Nginx Proxy ──▶ Frontend (React) :3000
+   │                         │
+   │                         └────────▶ Backend API (Express) :4000
+   │
+   ├─ Port 9443 ────▶ Portainer GUI (Docker Management)
    │
    └─ (Opsional) ───▶ Cloudflare Tunnel
 ```
 
-### Daftar Service & Port
+| Service | Port | Akses | Keterangan |
+|---------|:----:|-------|------------|
+| **Portainer** | **9443** | `https://IP:9443` | GUI untuk kelola Docker |
+| **Web App** | **80** | `http://IP` | Aplikasi Desa Digital |
+| **SSL** | **443** | `https://domain` | Otomatis via Certbot |
+| Backend API | 4000 | internal | Di-proxy oleh Nginx |
+| PostgreSQL | 5432 | internal | Tidak expose ke luar |
+| FFmpeg | — | internal | Transcoding CCTV |
+| DB Backup | — | internal | Cron backup jam 02:00 |
 
-| Service | Container | Port Internal | Port Expose | Keterangan |
-|---------|-----------|:---:|:---:|------------|
-| **Nginx Proxy** | desa-digital-proxy | 80, 443 | **80, 443** | Satu-satunya port yg terbuka |
-| **Frontend** | desa-digital-web | 3000 | — | Di-proxy oleh Nginx |
-| **Backend API** | desa-digital-api | 4000 | — | Di-proxy oleh Nginx |
-| **PostgreSQL** | desa-digital-db | 5432 | — | Tidak expose ke luar |
-| **FFmpeg** | desa-digital-ffmpeg | — | — | Transcoding CCTV |
-| **Certbot** | desa-digital-certbot | — | — | Auto-renew SSL |
-| **DB Backup** | desa-digital-backup | — | — | Backup harian 02:00 |
-| **Watchtower** | desa-digital-watchtower | — | — | Auto-update images |
-
-> **Yang perlu dibuka di firewall: hanya port 80 dan 443.**
+> **Firewall:** Buka port **80**, **443**, dan **9443** saja.
 
 ---
 
-## 🐳 Instalasi di Proxmox (Docker LXC)
+## � Persiapan: Buat LXC di Proxmox
 
-Anda menggunakan Proxmox? Langsung buat container Docker. Tidak perlu install Linux terpisah.
+### Langkah (GUI — di Proxmox Web UI)
 
-### Langkah 1: Buat LXC Container di Proxmox
+1. Login ke **Proxmox Web UI** (`https://IP_PROXMOX:8006`)
+2. Klik **local (storage)** → **CT Templates** → **Templates** → Download **ubuntu-22.04-standard**
+3. Klik **Create CT** (tombol kanan atas)
+4. Isi:
 
-1. Buka **Proxmox Web UI** → klik **Create CT**
-2. Isi konfigurasi:
-   - **Template:** `ubuntu-22.04-standard` (download dulu di local storage)
-   - **Hostname:** `desa-digital`
-   - **RAM:** 4096 MB (minimum), 8192 MB (rekomendasi)
-   - **CPU:** 2 core (minimum), 4 core (rekomendasi)
-   - **Disk:** 50 GB
-   - **Network:** Bridge ke jaringan Anda (DHCP atau static IP)
-3. ✅ Centang **Nesting** di tab Features (wajib untuk Docker)
-4. Klik **Create**, lalu **Start**
+| Tab | Setting | Nilai |
+|-----|---------|-------|
+| **General** | Hostname | `desa-digital` |
+| **General** | Password | *(password root LXC)* |
+| **Template** | Template | `ubuntu-22.04-standard` |
+| **Disks** | Disk size | `50 GB` |
+| **CPU** | Cores | `2` (min) / `4` (rekomendasi) |
+| **Memory** | Memory | `4096 MB` (min) / `8192 MB` (rekomendasi) |
+| **Network** | IPv4 | DHCP atau Static IP |
+| **Features** | ✅ Nesting | **Wajib dicentang!** |
 
-### Langkah 2: Install Docker di LXC
-
-Masuk ke console LXC (klik container → Console), lalu jalankan:
-
-```bash
-# Update sistem
-apt update && apt upgrade -y
-
-# Install Docker (satu perintah)
-curl -fsSL https://get.docker.com | sh
-
-# Verifikasi
-docker --version
-docker compose version
-```
-
-### Langkah 3: Clone Repository
-
-```bash
-cd /opt
-git clone https://github.com/faqihuddinhabibi/desadigital.git
-cd desadigital
-```
-
-> **Butuh akses?** Repository ini private. Kirim username GitHub Anda ke tim Fibernode untuk mendapatkan undangan.
-
-### Langkah 4: Buat File .env
-
-```bash
-cp .env.example .env
-nano .env
-```
-
-Lihat bagian [Konfigurasi Environment](#-konfigurasi-environment-env) di bawah.
-
-### Langkah 5: Jalankan!
-
-```bash
-# Satu perintah untuk semua service
-docker compose -f docker-compose.prod.yml up -d
-
-# Lihat status
-docker compose -f docker-compose.prod.yml ps
-
-# Lihat logs
-docker compose -f docker-compose.prod.yml logs -f
-```
-
-**Selesai!** Buka `http://IP_CONTAINER` di browser.
+5. Klik **Finish** → klik container → **Start**
 
 ---
 
-## ⚙️ Konfigurasi Environment (.env)
+## 🐳 Install Docker & Portainer (Satu Kali)
 
-Buat file `.env` di root folder project:
+> **Ini satu-satunya langkah yang perlu terminal.** Setelah ini, semuanya via GUI.
+
+1. Di Proxmox, klik container `desa-digital` → **Console**
+2. Jalankan perintah ini (copy-paste sekaligus):
+
+```bash
+apt update && apt upgrade -y && curl -fsSL https://get.docker.com | sh && docker run -d -p 9443:9443 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce:lts
+```
+
+3. **Selesai!** Sekarang buka browser:
+
+```
+https://IP_CONTAINER:9443
+```
+
+4. Buat **username & password** admin Portainer (pertama kali saja)
+5. Klik **Get Started** → klik **local** environment
+
+> **Mulai dari sini, semua dilakukan via GUI Portainer.** Tidak perlu terminal lagi.
+
+---
+
+## 🚀 Deploy via Portainer GUI
+
+### Langkah 1: Buat Stack dari Git Repository
+
+1. Di Portainer, klik **Stacks** (sidebar kiri)
+2. Klik **+ Add stack**
+3. Isi:
+   - **Name:** `desa-digital`
+   - **Build method:** pilih **Repository**
+   - **Repository URL:** `https://github.com/faqihuddinhabibi/desadigital`
+   - **Repository reference:** `refs/heads/main`
+   - **Compose path:** `docker-compose.prod.yml`
+
+### Langkah 2: Isi Environment Variables
+
+Scroll ke bawah ke bagian **Environment variables**, klik **Advanced mode**, lalu paste:
 
 ```env
-# ── Database ──
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=GantiDenganPasswordKuat123!
-POSTGRES_DB=desa_digital
-
-# ── Security (WAJIB diganti untuk production!) ──
-# Generate dengan: openssl rand -hex 32
-JWT_SECRET=paste_hasil_openssl_rand_hex_32_pertama
-JWT_REFRESH_SECRET=paste_hasil_openssl_rand_hex_32_kedua
-ENCRYPTION_KEY=paste_hasil_openssl_rand_hex_32_ketiga
-
-# ── Domain & CORS ──
-# Tanpa domain (akses via IP): http://IP_SERVER
-# Dengan domain: https://cctv.desaanda.com
-CORS_ORIGIN=http://IP_SERVER
-
-# ── Akun Superadmin (dibuat otomatis saat pertama kali) ──
+POSTGRES_PASSWORD=GantiDenganPasswordKuat123
+JWT_SECRET=paste_random_string_32_karakter_1
+JWT_REFRESH_SECRET=paste_random_string_32_karakter_2
+ENCRYPTION_KEY=paste_random_hex_64_karakter_3
+CORS_ORIGIN=http://IP_CONTAINER_ANDA
 ADMIN_USERNAME=superadmin
 ADMIN_PASSWORD=PasswordKuatAnda123!
 ADMIN_NAME=Super Admin
-
-# ── Data Demo (true = isi contoh desa/RT/kamera, false = kosong) ──
-SEED_DEMO_DATA=false
-
-# ── Docker Hub (untuk auto-update) ──
-DOCKERHUB_USERNAME=faqihuddinhabibi
-
-# ── Telegram (opsional, bisa diisi dari menu Setting di UI) ──
-TELEGRAM_BOT_TOKEN=
-TELEGRAM_CHAT_ID=
-
-# ── Cloudflare Tunnel (opsional) ──
-CLOUDFLARE_TUNNEL_TOKEN=
-```
-
-### Generate Secret Keys
-
-```bash
-# Jalankan 3x untuk 3 secret yang berbeda
-openssl rand -hex 32
-```
-
----
-
-## 🚀 Menjalankan Aplikasi
-
-### Perintah Utama
-
-```bash
-# Jalankan semua service
-docker compose -f docker-compose.prod.yml up -d
-
-# Dengan Cloudflare Tunnel
-docker compose -f docker-compose.prod.yml --profile cloudflare up -d
-
-# Stop semua
-docker compose -f docker-compose.prod.yml down
-
-# Restart
-docker compose -f docker-compose.prod.yml restart
-
-# Lihat logs
-docker compose -f docker-compose.prod.yml logs -f backend
-
-# Update ke versi terbaru
-docker compose -f docker-compose.prod.yml pull
-docker compose -f docker-compose.prod.yml up -d
-```
-
-### Akses Aplikasi
-
-| Akses | URL |
-|-------|-----|
-| **Web App** | `http://IP_SERVER` (atau `https://domain-anda.com`) |
-| **Health Check** | `http://IP_SERVER/health` |
-
----
-
-## 👤 Akun Superadmin
-
-### Pengaturan Awal via .env
-
-Username dan password superadmin dikonfigurasi di file `.env` **sebelum** pertama kali menjalankan Docker:
-
-```env
-ADMIN_USERNAME=superadmin
-ADMIN_PASSWORD=PasswordKuatAnda123!
-ADMIN_NAME=Super Admin
-```
-
-> Akun hanya dibuat **sekali** saat pertama kali jalan. Jika sudah ada superadmin, env vars di atas diabaikan.
-
-### Data Seed (Demo)
-
-```env
-# true  = buat contoh desa, RT, user demo, kamera demo
-# false = kosong, hanya superadmin
 SEED_DEMO_DATA=false
 ```
 
-Jika `SEED_DEMO_DATA=true`, akun demo berikut juga dibuat:
+> **Generate random key** di: https://generate-random.org/api-key-generator (pilih 256-bit Hex untuk `ENCRYPTION_KEY`, 256-bit untuk lainnya)
+
+### Langkah 3: Deploy!
+
+Klik **Deploy the stack** dan tunggu hingga semua container **running** (hijau).
+
+### Langkah 4: Buka Aplikasi
+
+Buka browser: `http://IP_CONTAINER`
+
+---
+
+## 👤 Akun Superadmin & Login
+
+### Default
+
+Username dan password superadmin sesuai yang Anda isi di environment variables:
+
+| Setting | Default |
+|---------|---------|
+| `ADMIN_USERNAME` | `superadmin` |
+| `ADMIN_PASSWORD` | `Admin123!` |
+| `ADMIN_NAME` | `Super Admin` |
+
+> Akun dibuat **otomatis sekali** saat pertama kali jalan. Setelah itu env vars diabaikan.
+
+### Demo Data
+
+Jika `SEED_DEMO_DATA=true`, akan dibuat juga:
 
 | Role | Username | Password |
 |------|----------|----------|
-| **Admin RT** | `adminrt01` | `AdminRT123!` |
-| **Warga** | `warga01` | `Warga123!` |
+| Admin RT | `adminrt01` | `AdminRT123!` |
+| Warga | `warga01` | `Warga123!` |
 
-### Login
+### Cara Login
 
-1. Buka `http://IP_SERVER` di browser
-2. Masukkan username & password yang sudah diatur
+1. Buka `http://IP_CONTAINER`
+2. Masukkan username & password
 3. Klik **Masuk**
 
-### Struktur Role
-
-| Role | Akses |
-|------|-------|
-| **Superadmin** | Semua fitur: kelola desa, RT, user, kamera, pengaturan |
-| **Admin RT** | Lihat & kelola kamera di RT-nya |
-| **Warga** | Hanya lihat kamera di RT-nya |
-
 ---
 
-## 🌐 Domain Custom & SSL Gratis
+## 🌐 Domain & SSL Gratis (via UI)
 
-SSL **gratis dan otomatis** menggunakan Let's Encrypt. Berikut cara setupnya:
+Semua pengaturan domain dan SSL bisa dilakukan dari **dalam aplikasi**.
 
-### Langkah 1: Beli Domain
-
-Beli dari registrar manapun: Niagahoster, Hostinger, Namecheap, Cloudflare, dll.
-
-### Langkah 2: Setting DNS
-
-Login ke panel DNS domain Anda, tambahkan record:
-
-| Type | Name | Value | TTL |
-|------|------|-------|-----|
-| **A** | `@` | `IP_SERVER_ANDA` | 300 |
-| **A** | `www` | `IP_SERVER_ANDA` | 300 |
-
-> **Cek propagasi DNS:** Buka https://dnschecker.org dan masukkan domain Anda. Tunggu hingga semua server menunjukkan IP yang benar (biasanya 5-30 menit).
-
-### Langkah 3: Update .env
-
-```env
-CORS_ORIGIN=https://cctv.desaanda.com
-```
-
-### Langkah 4: Generate SSL
-
-```bash
-# Pastikan Docker sudah jalan
-docker compose -f docker-compose.prod.yml up -d
-
-# Generate SSL
-./scripts/setup-ssl.sh cctv.desaanda.com admin@email.com
-
-# Restart
-docker compose -f docker-compose.prod.yml restart
-```
-
-**Selesai!** Buka `https://cctv.desaanda.com`. SSL akan otomatis diperpanjang oleh Certbot.
-
-> SSL juga bisa dikonfigurasi dari **menu Pengaturan → Domain & SSL** di dalam aplikasi.
-
----
-
-## ☁️ Cloudflare Tunnel (Tanpa Buka Port)
-
-Alternatif SSL tanpa perlu membuka port 80/443 di firewall. Cocok untuk jaringan di belakang NAT.
-
-### Langkah 1: Buat Akun Cloudflare
-
-1. Daftar gratis di https://dash.cloudflare.com
-2. Tambahkan domain Anda ke Cloudflare
-3. Pindahkan nameserver domain ke Cloudflare (ikuti panduan di dashboard)
-
-### Langkah 2: Buat Tunnel
-
-1. Buka https://one.dash.cloudflare.com
-2. Pilih **Networks** → **Tunnels** → **Create a tunnel**
-3. Pilih **Cloudflared**, beri nama (contoh: `desa-digital`)
-4. **Copy token** yang diberikan (dimulai dengan `eyJ...`)
-
-### Langkah 3: Konfigurasi Hostname
-
-Di halaman tunnel, tambahkan **Public Hostname**:
-
-| Subdomain | Domain | Service |
-|-----------|--------|---------|
-| `cctv` | `desaanda.com` | `http://desa-digital-proxy:80` |
-
-### Langkah 4: Jalankan dengan Tunnel
-
-```bash
-# Tambahkan token ke .env
-echo "CLOUDFLARE_TUNNEL_TOKEN=eyJ..." >> .env
-
-# Jalankan dengan profile cloudflare
-docker compose -f docker-compose.prod.yml --profile cloudflare up -d
-```
-
-**Selesai!** Buka `https://cctv.desaanda.com`.
-
-> Tunnel juga bisa dikonfigurasi dari **menu Pengaturan → Domain & SSL** di dalam aplikasi.
-
----
-
-## 🤖 Bot Telegram (Notifikasi)
-
-Terima notifikasi otomatis di Telegram untuk:
-- 🔴 **Kamera terputus** — beserta daftar kamera yang masih offline
-- 🟢 **Kamera terhubung kembali** — beserta daftar yang masih offline
-- 💾 **Backup database harian** — ukuran file dan jumlah backup
-
-### Cara Membuat Bot Telegram
-
-1. Buka Telegram, cari **@BotFather**
-2. Kirim `/newbot`
-3. Masukkan nama bot: `Desa Digital Alert`
-4. Masukkan username bot: `desadigital_alert_bot` (harus unik)
-5. **Copy Bot Token** yang diberikan
-
-### Cara Mendapatkan Chat ID
-
-**Opsi A — Via grup:**
-1. Buat grup Telegram, tambahkan bot ke grup
-2. Kirim pesan apapun di grup
-3. Buka di browser: `https://api.telegram.org/bot<TOKEN>/getUpdates`
-4. Cari `"chat":{"id":-100xxx}` — itulah Chat ID
-
-**Opsi B — Via bot bantuan:**
-- Kirim pesan ke [@userinfobot](https://t.me/userinfobot) atau [@getmyid_bot](https://t.me/getmyid_bot)
-
-### Konfigurasi
-
-**Via .env (untuk backup notification):**
-```env
-TELEGRAM_BOT_TOKEN=123456789:ABCdefGHIjklMNOpqrSTUvwxYZ
-TELEGRAM_CHAT_ID=-1001234567890
-```
-
-**Via UI (untuk semua notifikasi):**
 1. Login sebagai Superadmin
-2. Buka **Pengaturan** → **Telegram Bot**
-3. Masukkan Bot Token dan Chat ID
+2. Buka menu **Pengaturan** → tab **Domain & SSL**
+3. Masukkan domain Anda (contoh: `cctv.desaanda.com`)
+4. Pilih metode SSL:
+   - **Let's Encrypt** — SSL gratis otomatis (perlu buka port 80/443)
+   - **Cloudflare Tunnel** — SSL tanpa buka port
+5. Klik **Simpan**
+
+> Di halaman yang sama ada **tutorial langkah demi langkah** (klik untuk expand):
+> - Tutorial Setting DNS
+> - Tutorial SSL Let's Encrypt
+> - Tutorial Cloudflare Tunnel
+
+### Ringkasan DNS
+
+Di panel DNS registrar domain Anda, buat:
+
+| Type | Name | Value |
+|------|------|-------|
+| A | @ | IP Server |
+| A | www | IP Server |
+
+---
+
+## ☁️ Cloudflare Tunnel (via UI)
+
+1. Buat tunnel di https://one.dash.cloudflare.com → **Networks** → **Tunnels**
+2. Copy token tunnel
+3. Di aplikasi: **Pengaturan** → **Domain & SSL** → pilih **Cloudflare Tunnel** → paste token → **Simpan**
+4. Di Portainer: edit stack → tambah env var `CLOUDFLARE_TUNNEL_TOKEN=eyJ...` → **Update the stack**
+5. Di konfigurasi tunnel Cloudflare, tambah hostname: `cctv.desaanda.com` → `http://desa-digital-proxy:80`
+
+---
+
+## 🤖 Bot Telegram (via UI)
+
+Semua pengaturan Telegram dilakukan dari **dalam aplikasi**.
+
+1. Login sebagai Superadmin
+2. Buka **Pengaturan** → tab **Telegram Bot**
+3. Masukkan **Bot Token** dan **Chat ID**
 4. Aktifkan notifikasi
 5. Klik **Test Kirim** untuk verifikasi
 6. Klik **Simpan**
+
+> Di halaman yang sama ada **tutorial lengkap** cara membuat bot dan mendapatkan Chat ID.
+
+### Yang Dikirim Otomatis
+
+| Event | Contoh |
+|-------|--------|
+| 🔴 Kamera terputus | Nama kamera + daftar semua yang offline |
+| 🟢 Kamera online kembali | Nama kamera + sisa yang masih offline |
+| 💾 Backup harian | Nama file, ukuran, jumlah backup |
+
+### Telegram untuk Backup
+
+Jika ingin notifikasi backup juga dikirim, tambahkan env var di Portainer:
+
+1. Di Portainer → **Stacks** → `desa-digital` → **Editor**
+2. Scroll ke **Environment variables**, tambah:
+   - `TELEGRAM_BOT_TOKEN` = token bot Anda
+   - `TELEGRAM_CHAT_ID` = chat ID Anda
+3. Klik **Update the stack**
 
 ---
 
@@ -408,65 +274,45 @@ TELEGRAM_CHAT_ID=-1001234567890
 
 ### Backup Otomatis
 
-Database di-backup **otomatis setiap hari jam 02:00**. File backup disimpan di folder `./backups/` dan otomatis dihapus setelah 7 hari.
+Database di-backup **otomatis setiap hari jam 02:00** oleh container `desa-digital-backup`. Backup disimpan selama 7 hari.
 
-Jika Telegram dikonfigurasi, notifikasi backup akan dikirim setiap hari.
+### Backup Manual (via Portainer)
 
-### Backup Manual
-
-```bash
-# Backup ke file SQL
-docker compose -f docker-compose.prod.yml exec postgres \
-  pg_dump -U postgres desa_digital | gzip > backup_manual_$(date +%Y%m%d).sql.gz
+1. Di Portainer → klik container **desa-digital-db** → **Console**
+2. Pilih **/bin/sh** → **Connect**
+3. Jalankan:
+```
+pg_dump -U postgres desa_digital > /tmp/backup.sql
 ```
 
-### Restore Database
+### Restore (via Portainer)
 
-```bash
-# 1. Stop backend dulu
-docker compose -f docker-compose.prod.yml stop backend
-
-# 2. Restore dari file backup
-gunzip -c ./backups/desa_digital_20250212_020000.sql.gz | \
-  docker compose -f docker-compose.prod.yml exec -T postgres \
-  psql -U postgres desa_digital
-
-# 3. Start backend
-docker compose -f docker-compose.prod.yml start backend
+1. Di Portainer → **Containers** → Stop **desa-digital-api**
+2. Klik container **desa-digital-db** → **Console** → **/bin/sh**
+3. Jalankan:
 ```
-
-### Restore dari File .sql (tanpa gzip)
-
-```bash
-docker compose -f docker-compose.prod.yml exec -T postgres \
-  psql -U postgres desa_digital < backup_file.sql
+psql -U postgres desa_digital < /tmp/backup.sql
 ```
+4. Start kembali **desa-digital-api**
 
-### Reset Database (Hapus Semua Data)
+### Reset Database
 
-⚠️ **HATI-HATI: Menghapus semua data!**
-
-```bash
-docker compose -f docker-compose.prod.yml down -v
-docker compose -f docker-compose.prod.yml up -d
-```
+Di Portainer → **Stacks** → `desa-digital` → **Stop** → centang **Remove volumes** → **Delete** → Deploy ulang.
 
 ---
 
-## 🎨 Logo & Branding
-
-Logo, nama aplikasi, dan splash screen bisa diganti dari **menu Pengaturan**:
+## 🎨 Logo & Branding (via UI)
 
 1. Login sebagai Superadmin
-2. Buka **Pengaturan** → **Logo & Branding**
+2. Buka **Pengaturan** → tab **Logo & Branding**
 3. Isi:
-   - **Nama Aplikasi** — Ditampilkan di login, sidebar, splash screen
-   - **URL Logo** — Untuk halaman login dan sidebar (PNG/SVG, 200x200px)
+   - **Nama Aplikasi** — Tampil di login, sidebar, splash screen
+   - **URL Logo** — Untuk login & sidebar (PNG/SVG, 200x200px)
    - **URL Logo Splash Screen** — Opsional, untuk splash screen saja
 4. Klik **Simpan**
 5. **Refresh halaman** untuk melihat perubahan
 
-> Splash screen muncul selama 3 detik saat membuka aplikasi.
+> Splash screen tampil selama 3 detik saat membuka aplikasi.
 
 ---
 
@@ -474,69 +320,76 @@ Logo, nama aplikasi, dan splash screen bisa diganti dari **menu Pengaturan**:
 
 ### Persyaratan
 
-- Kamera mendukung **RTSP streaming**
-- Kamera terhubung ke jaringan yang sama (atau bisa diakses dari server)
-- IP kamera sebaiknya **static**
+- Kamera mendukung **RTSP**
+- Kamera terhubung ke jaringan server
+- IP kamera **static** (disarankan)
 
 ### Format URL RTSP
 
 | Merek | Format |
 |-------|--------|
-| **Hikvision** | `rtsp://admin:password@192.168.1.100:554/Streaming/Channels/101` |
-| **Dahua** | `rtsp://admin:password@192.168.1.100:554/cam/realmonitor?channel=1&subtype=0` |
-| **TP-Link** | `rtsp://admin:password@192.168.1.100:554/stream1` |
-| **Generic** | `rtsp://admin:password@192.168.1.100:554/live` |
+| **Hikvision** | `rtsp://admin:pass@192.168.1.100:554/Streaming/Channels/101` |
+| **Dahua** | `rtsp://admin:pass@192.168.1.100:554/cam/realmonitor?channel=1&subtype=0` |
+| **TP-Link** | `rtsp://admin:pass@192.168.1.100:554/stream1` |
+| **Generic** | `rtsp://admin:pass@192.168.1.100:554/live` |
 
 ### Langkah
 
-1. **Test dulu** dengan VLC: Media → Open Network Stream → masukkan URL RTSP
-2. Login sebagai Superadmin → **Kamera** → **+ Tambah Kamera**
-3. Isi nama, URL RTSP, lokasi, dan pilih RT
-4. Klik **Simpan**
+1. **Test dulu** dengan VLC: Media → Open Network Stream → paste URL RTSP
+2. Login Superadmin → **Kamera** → **+ Tambah Kamera**
+3. Isi nama, URL RTSP, lokasi, pilih RT
+4. **Simpan**
+
+---
+
+## �️ Manajemen via Portainer GUI
+
+Setelah deploy, semua manajemen Docker dilakukan via Portainer (`https://IP:9443`):
+
+| Aksi | Langkah di Portainer |
+|------|---------------------|
+| **Lihat status** | Stacks → `desa-digital` → lihat semua container |
+| **Lihat logs** | Containers → klik container → **Logs** |
+| **Restart service** | Containers → klik container → **Restart** |
+| **Update stack** | Stacks → `desa-digital` → **Editor** → **Update the stack** |
+| **Pull update terbaru** | Stacks → `desa-digital` → centang **Re-pull image** → **Update** |
+| **Edit env vars** | Stacks → `desa-digital` → scroll ke Environment → edit → **Update** |
+| **Masuk ke console** | Containers → klik container → **Console** → **/bin/sh** |
+| **Stop semua** | Stacks → `desa-digital` → **Stop** |
+| **Hapus stack** | Stacks → `desa-digital` → **Delete** |
 
 ---
 
 ## 🔧 Troubleshooting
 
-### Container tidak bisa start
+### Container tidak running (merah)
 
-```bash
-docker compose -f docker-compose.prod.yml logs -f
-docker compose -f docker-compose.prod.yml down
-docker compose -f docker-compose.prod.yml up -d
-```
+1. Di Portainer → **Containers** → klik container yang merah
+2. Klik **Logs** → lihat error terakhir
+3. Klik **Restart**
 
-### Database connection error
+### Database error
 
-```bash
-docker compose -f docker-compose.prod.yml ps postgres
-docker compose -f docker-compose.prod.yml exec postgres psql -U postgres -d desa_digital -c "SELECT 1"
-```
+1. Pastikan container `desa-digital-db` running (hijau)
+2. Klik container → **Console** → **/bin/sh**
+3. Jalankan: `pg_isready -U postgres`
 
 ### Kamera offline
 
 1. Test URL RTSP dengan VLC
-2. Pastikan kamera bisa diakses dari server: `curl rtsp://...` atau ping IP kamera
-3. Cek firewall tidak memblokir port 554
-4. Lihat logs: `docker compose -f docker-compose.prod.yml logs ffmpeg-relay`
+2. Pastikan kamera bisa diakses dari server (ping IP kamera)
+3. Di Portainer → container `desa-digital-ffmpeg` → **Logs**
 
-### SSL error
+### Tidak bisa akses aplikasi
 
-```bash
-# Cek sertifikat
-docker compose -f docker-compose.prod.yml exec certbot certbot certificates
+1. Pastikan container `desa-digital-proxy` running
+2. Cek firewall: port 80 harus terbuka
+3. Di Portainer → container `desa-digital-proxy` → **Logs**
 
-# Renew manual
-docker compose -f docker-compose.prod.yml exec certbot certbot renew
-docker compose -f docker-compose.prod.yml restart nginx-proxy
-```
+### Reset lengkap
 
-### Reset lengkap (mulai dari awal)
-
-```bash
-docker compose -f docker-compose.prod.yml down -v --rmi all
-docker compose -f docker-compose.prod.yml up -d
-```
+1. Portainer → **Stacks** → `desa-digital` → **Delete** (centang remove volumes)
+2. Deploy ulang dari repository
 
 ---
 
@@ -549,9 +402,8 @@ docker compose -f docker-compose.prod.yml up -d
 | 🌐 Website | https://fibernode.id |
 
 Saat melapor, sertakan:
-1. Screenshot error
-2. Output `docker compose -f docker-compose.prod.yml logs`
-3. Spesifikasi server (RAM, CPU, disk)
+1. Screenshot error dari Portainer (container logs)
+2. Spesifikasi server
 
 ---
 

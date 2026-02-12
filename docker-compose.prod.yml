@@ -1,11 +1,12 @@
 services:
+  # ── Database ──
   postgres:
     image: postgres:16-alpine
     container_name: desa-digital-db
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-desa_digital}
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -15,42 +16,44 @@ services:
       timeout: 5s
       retries: 5
 
+  # ── Backend API (build from source) ──
   backend:
-    image: ${DOCKERHUB_USERNAME}/desadigital-backend:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: desa-digital-api
     restart: unless-stopped
     environment:
       NODE_ENV: production
       PORT: 4000
-      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-desa_digital}
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
-      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
-      CORS_ORIGIN: ${CORS_ORIGIN:-https://desadigital.fibernode.id}
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-desa_digital}
+      JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-change-in-production-min32chars}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-dev-jwt-refresh-secret-change-in-production}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost}
       STREAMS_DIR: /app/streams
       ADMIN_USERNAME: ${ADMIN_USERNAME:-superadmin}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin123!}
       ADMIN_NAME: ${ADMIN_NAME:-Super Admin}
       SEED_DEMO_DATA: ${SEED_DEMO_DATA:-false}
     volumes:
-      - ./streams:/app/streams
-      - ./uploads:/app/uploads
+      - streams_data:/app/streams
+      - uploads_data:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
 
+  # ── Frontend (build from source) ──
   frontend:
-    image: ${DOCKERHUB_USERNAME}/desadigital-frontend:latest
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     container_name: desa-digital-web
     restart: unless-stopped
     depends_on:
       - backend
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
 
-  # Nginx reverse proxy with auto-SSL
+  # ── Nginx Reverse Proxy ──
   nginx-proxy:
     image: nginx:alpine
     container_name: desa-digital-proxy
@@ -67,7 +70,18 @@ services:
       - frontend
       - backend
 
-  # Let's Encrypt auto-renewal (optional, used when sslMethod=letsencrypt)
+  # ── Portainer (Docker GUI Management) ──
+  portainer:
+    image: portainer/portainer-ce:lts
+    container_name: desa-digital-portainer
+    restart: unless-stopped
+    ports:
+      - "9443:9443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+
+  # ── Let's Encrypt SSL (opsional) ──
   certbot:
     image: certbot/certbot
     container_name: desa-digital-certbot
@@ -77,20 +91,21 @@ services:
       - ./nginx/certs:/etc/letsencrypt
     entrypoint: /bin/sh
     command: -c "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done"
+    profiles:
+      - ssl
 
-  # Cloudflare Tunnel (optional, used when sslMethod=cloudflare_tunnel)
+  # ── Cloudflare Tunnel (opsional) ──
   cloudflared:
     image: cloudflare/cloudflared:latest
     container_name: desa-digital-tunnel
     restart: unless-stopped
     command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN:-placeholder}
     depends_on:
-      - frontend
-      - backend
+      - nginx-proxy
     profiles:
       - cloudflare
 
-  # Daily database backup (02:00 setiap hari)
+  # ── Daily Database Backup (02:00) ──
   db-backup:
     image: postgres:16-alpine
     container_name: desa-digital-backup
@@ -98,12 +113,12 @@ services:
     environment:
       PGHOST: postgres
       PGUSER: ${POSTGRES_USER:-postgres}
-      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-postgres}
       PGDATABASE: ${POSTGRES_DB:-desa_digital}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
     volumes:
-      - ./backups:/backups
+      - backups_data:/backups
       - ./scripts/backup.sh:/backup.sh:ro
     entrypoint: /bin/sh
     command: >
@@ -117,26 +132,20 @@ services:
       postgres:
         condition: service_healthy
 
+  # ── FFmpeg Relay (CCTV Transcoding) ──
   ffmpeg-relay:
     image: linuxserver/ffmpeg:latest
     container_name: desa-digital-ffmpeg
     restart: unless-stopped
     volumes:
-      - ./streams:/streams
+      - streams_data:/streams
     entrypoint: /bin/bash
     command: -c "echo 'FFmpeg relay ready.' && tail -f /dev/null"
-
-  watchtower:
-    image: containrrr/watchtower
-    container_name: desa-digital-watchtower
-    restart: unless-stopped
-    environment:
-      WATCHTOWER_CLEANUP: "true"
-      WATCHTOWER_POLL_INTERVAL: 300
-      WATCHTOWER_LABEL_ENABLE: "true"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
 
 volumes:
   postgres_data:
   certbot_data:
+  portainer_data:
+  streams_data:
+  uploads_data:
+  backups_data:
