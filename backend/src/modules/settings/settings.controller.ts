@@ -11,7 +11,7 @@ export const settingsRouter = Router();
 
 settingsRouter.get('/branding', async (_req, res, next) => {
   try {
-    const keys = ['app_name', 'logo_url', 'splash_logo_url'];
+    const keys = ['app_name', 'site_subtitle', 'logo_url', 'splash_logo_url', 'favicon_url', 'meta_title', 'meta_description', 'og_image_url'];
     const branding: Record<string, string | null> = {};
     for (const key of keys) {
       branding[key] = await settingsService.getSetting(key);

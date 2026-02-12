@@ -94,14 +94,24 @@ function BrandingSettings() {
   });
 
   const [appName, setAppName] = useState('');
+  const [siteSubtitle, setSiteSubtitle] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
   const [splashLogoUrl, setSplashLogoUrl] = useState('');
+  const [faviconUrl, setFaviconUrl] = useState('');
+  const [metaTitle, setMetaTitle] = useState('');
+  const [metaDescription, setMetaDescription] = useState('');
+  const [ogImageUrl, setOgImageUrl] = useState('');
 
   useEffect(() => {
     if (settings) {
       setAppName(settings.app_name || '');
+      setSiteSubtitle(settings.site_subtitle || '');
       setLogoUrl(settings.logo_url || '');
       setSplashLogoUrl(settings.splash_logo_url || '');
+      setFaviconUrl(settings.favicon_url || '');
+      setMetaTitle(settings.meta_title || '');
+      setMetaDescription(settings.meta_description || '');
+      setOgImageUrl(settings.og_image_url || '');
     }
   }, [settings]);
 
@@ -113,8 +123,13 @@ function BrandingSettings() {
   const handleSave = () => {
     mutation.mutate({
       app_name: appName || null,
+      site_subtitle: siteSubtitle || null,
       logo_url: logoUrl || null,
       splash_logo_url: splashLogoUrl || null,
+      favicon_url: faviconUrl || null,
+      meta_title: metaTitle || null,
+      meta_description: metaDescription || null,
+      og_image_url: ogImageUrl || null,
     });
   };
 
@@ -122,6 +137,7 @@ function BrandingSettings() {
 
   return (
     <div className="space-y-6">
+      {/* Logo & Nama */}
       <div className="card">
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <Image className="h-5 w-5" />
@@ -131,16 +147,21 @@ function BrandingSettings() {
           <div>
             <label className="text-sm font-medium">Nama Aplikasi</label>
             <input type="text" value={appName} onChange={(e) => setAppName(e.target.value)} placeholder="Desa Digital" className="input mt-1" />
-            <p className="text-xs text-muted-foreground mt-1">Ditampilkan di halaman login, sidebar, dan splash screen</p>
+            <p className="text-xs text-muted-foreground mt-1">Ditampilkan di header RT/Warga, halaman login, sidebar, dan splash screen</p>
           </div>
           <div>
-            <label className="text-sm font-medium">URL Logo (Login & Sidebar)</label>
+            <label className="text-sm font-medium">Subtitle / Tagline</label>
+            <input type="text" value={siteSubtitle} onChange={(e) => setSiteSubtitle(e.target.value)} placeholder="BY FIBERNODE INTERNET" className="input mt-1" />
+            <p className="text-xs text-muted-foreground mt-1">Ditampilkan di bawah nama aplikasi pada header RT/Warga dan watermark kamera</p>
+          </div>
+          <div>
+            <label className="text-sm font-medium">URL Logo (Header & Sidebar)</label>
             <input type="url" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="https://example.com/logo.png" className="input mt-1" />
             <p className="text-xs text-muted-foreground mt-1">Gunakan URL gambar PNG/SVG transparan. Ukuran rekomendasi: 200x200px</p>
             {logoUrl && (
               <div className="mt-2 p-3 bg-muted/50 rounded-lg inline-flex items-center gap-3">
                 <img src={logoUrl} alt="Preview" className="w-12 h-12 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                <span className="text-xs text-muted-foreground">Preview</span>
+                <span className="text-xs text-muted-foreground">Preview Logo</span>
               </div>
             )}
           </div>
@@ -151,9 +172,61 @@ function BrandingSettings() {
             {splashLogoUrl && (
               <div className="mt-2 p-3 bg-muted/50 rounded-lg inline-flex items-center gap-3">
                 <img src={splashLogoUrl} alt="Preview" className="w-16 h-16 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                <span className="text-xs text-muted-foreground">Preview</span>
+                <span className="text-xs text-muted-foreground">Preview Splash</span>
               </div>
             )}
+          </div>
+        </div>
+      </div>
+
+      {/* Favicon */}
+      <div className="card">
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <Globe className="h-5 w-5" />
+          Favicon & Thumbnail
+        </h3>
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium">URL Favicon</label>
+            <input type="url" value={faviconUrl} onChange={(e) => setFaviconUrl(e.target.value)} placeholder="https://example.com/favicon.png" className="input mt-1" />
+            <p className="text-xs text-muted-foreground mt-1">Ikon kecil di tab browser. Format: PNG, SVG, atau ICO. Ukuran: 32x32 atau 64x64px</p>
+            {faviconUrl && (
+              <div className="mt-2 p-3 bg-muted/50 rounded-lg inline-flex items-center gap-3">
+                <img src={faviconUrl} alt="Favicon" className="w-8 h-8 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                <span className="text-xs text-muted-foreground">Preview Favicon</span>
+              </div>
+            )}
+          </div>
+          <div>
+            <label className="text-sm font-medium">URL OG Image (Social Media Thumbnail)</label>
+            <input type="url" value={ogImageUrl} onChange={(e) => setOgImageUrl(e.target.value)} placeholder="https://example.com/og-image.png" className="input mt-1" />
+            <p className="text-xs text-muted-foreground mt-1">Gambar yang muncul saat link dibagikan di WhatsApp, Facebook, Twitter, dll. Ukuran: 1200x630px</p>
+            {ogImageUrl && (
+              <div className="mt-2 p-3 bg-muted/50 rounded-lg inline-block">
+                <img src={ogImageUrl} alt="OG Image" className="w-64 h-auto rounded object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                <p className="text-xs text-muted-foreground mt-1">Preview OG Image</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Meta Tags */}
+      <div className="card">
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <BookOpen className="h-5 w-5" />
+          Meta Tags (SEO)
+        </h3>
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium">Meta Title</label>
+            <input type="text" value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)} placeholder="Desa Digital - Monitoring CCTV | Fibernode" className="input mt-1" />
+            <p className="text-xs text-muted-foreground mt-1">Judul halaman di tab browser dan hasil pencarian Google</p>
+          </div>
+          <div>
+            <label className="text-sm font-medium">Meta Description</label>
+            <textarea value={metaDescription} onChange={(e) => setMetaDescription(e.target.value)} placeholder="Sistem monitoring CCTV terintegrasi untuk desa digital..." className="input mt-1 min-h-[80px]" />
+            <p className="text-xs text-muted-foreground mt-1">Deskripsi singkat yang muncul di hasil pencarian Google. Maksimal 160 karakter</p>
           </div>
         </div>
       </div>
@@ -161,7 +234,7 @@ function BrandingSettings() {
       <div className="flex justify-end">
         <button onClick={handleSave} disabled={mutation.isPending} className="btn btn-primary">
           {mutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-          Simpan
+          Simpan Semua
         </button>
       </div>
       {mutation.isSuccess && (

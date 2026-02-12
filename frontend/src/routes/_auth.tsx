@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { api } from '../lib/api';
+import { useBranding } from '../hooks/useBranding';
 
 export const Route = createFileRoute('/_auth')({
   beforeLoad: ({ context, location }) => {
@@ -53,6 +54,7 @@ function RTWargaLayout() {
   const navigate = useNavigate();
   const { setTheme, resolvedTheme } = useTheme();
   const [showProfile, setShowProfile] = useState(false);
+  const branding = useBranding();
 
   const handleLogout = async () => {
     await logout();
@@ -63,12 +65,16 @@ function RTWargaLayout() {
     <div className="min-h-screen flex flex-col bg-background">
       <header className="flex items-center justify-between border-b px-4 sm:px-8 py-3 bg-card/50 backdrop-blur-md sticky top-0 z-50">
         <div className="flex items-center gap-3">
-          <div className="bg-primary p-1.5 rounded-lg flex items-center justify-center">
-            <Shield className="h-5 w-5 text-primary-foreground" />
-          </div>
+          {branding.logo_url ? (
+            <img src={branding.logo_url} alt={branding.app_name || 'Logo'} className="h-9 w-9 object-contain rounded-lg" />
+          ) : (
+            <div className="bg-primary p-1.5 rounded-lg flex items-center justify-center">
+              <Shield className="h-5 w-5 text-primary-foreground" />
+            </div>
+          )}
           <div>
-            <h1 className="text-sm font-bold leading-tight tracking-tight uppercase text-primary">Desa Digital</h1>
-            <p className="text-[10px] text-muted-foreground font-medium tracking-widest">BY FIBERNODE INTERNET</p>
+            <h1 className="text-sm font-bold leading-tight tracking-tight uppercase text-primary">{branding.app_name || 'Desa Digital'}</h1>
+            <p className="text-[10px] text-muted-foreground font-medium tracking-widest">{branding.site_subtitle || 'BY FIBERNODE INTERNET'}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -214,6 +220,7 @@ function SuperadminLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { setTheme, resolvedTheme } = useTheme();
+  const branding = useBranding();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
@@ -251,10 +258,14 @@ function SuperadminLayout() {
           <div className="h-16 flex items-center justify-between px-4 border-b">
             {!sidebarCollapsed && (
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-[#ED1C24] rounded flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">F</span>
-                </div>
-                <span className="font-semibold">Desa Digital</span>
+                {branding.logo_url ? (
+                  <img src={branding.logo_url} alt="" className="w-8 h-8 object-contain rounded" />
+                ) : (
+                  <div className="w-8 h-8 bg-[#ED1C24] rounded flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">F</span>
+                  </div>
+                )}
+                <span className="font-semibold">{branding.app_name || 'Desa Digital'}</span>
               </div>
             )}
             <button

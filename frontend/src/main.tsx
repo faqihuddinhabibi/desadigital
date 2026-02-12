@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider, createRouter } from '@tanstack/react-router';
 import { routeTree } from './routeTree.gen';
 import { AuthProvider, useAuth } from './hooks/useAuth';
+import { BrandingProvider, type Branding } from './hooks/useBranding';
 import './index.css';
 
 const queryClient = new QueryClient({
@@ -30,12 +31,6 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface Branding {
-  app_name: string | null;
-  logo_url: string | null;
-  splash_logo_url: string | null;
-}
-
 function SplashScreen({ branding, onDone }: { branding: Branding | null; onDone: () => void }) {
   useEffect(() => {
     const timer = setTimeout(onDone, 3000);
@@ -44,6 +39,7 @@ function SplashScreen({ branding, onDone }: { branding: Branding | null; onDone:
 
   const logoSrc = branding?.splash_logo_url || branding?.logo_url;
   const appName = branding?.app_name || 'Desa Digital';
+  const subtitle = branding?.site_subtitle || 'BY FIBERNODE INTERNET';
 
   return (
     <div className="fixed inset-0 z-[9999] bg-background flex flex-col items-center justify-center animate-fade-in">
@@ -55,7 +51,7 @@ function SplashScreen({ branding, onDone }: { branding: Branding | null; onDone:
         </div>
       )}
       <h1 className="text-2xl font-bold tracking-tight">{appName}</h1>
-      <p className="text-sm text-muted-foreground mt-1 italic">More Than Internet—A True Partner</p>
+      <p className="text-sm text-muted-foreground mt-1 italic">{subtitle}</p>
       <div className="mt-8 w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
     </div>
   );
@@ -83,9 +79,11 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <InnerApp />
-      </AuthProvider>
+      <BrandingProvider initialBranding={branding}>
+        <AuthProvider>
+          <InnerApp />
+        </AuthProvider>
+      </BrandingProvider>
     </QueryClientProvider>
   );
 }

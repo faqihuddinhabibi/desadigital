@@ -4,6 +4,7 @@ import { api } from '../../../lib/api';
 import { ArrowLeft, Maximize, Volume2, VolumeX, ChevronLeft, ChevronRight, Shield, Camera as CameraIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../../hooks/useAuth';
+import { useBranding } from '../../../hooks/useBranding';
 import Hls from 'hls.js';
 import type { Camera, PaginatedResponse } from '../../../types';
 
@@ -25,6 +26,7 @@ function CameraDetailPage() {
 function RTWargaCameraDetail() {
   const { cameraId } = Route.useParams();
   const navigate = useNavigate();
+  const branding = useBranding();
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const [isMuted, setIsMuted] = useState(true);
@@ -103,12 +105,16 @@ function RTWargaCameraDetail() {
 
       {/* Branding Watermark (top-left) */}
       <div className="absolute top-6 left-6 flex items-center gap-2.5 opacity-60 pointer-events-none">
-        <div className="bg-primary/80 p-1 rounded">
-          <Shield className="h-4 w-4 text-white" />
-        </div>
+        {branding.logo_url ? (
+          <img src={branding.logo_url} alt="" className="h-7 w-7 object-contain rounded" />
+        ) : (
+          <div className="bg-primary/80 p-1 rounded">
+            <Shield className="h-4 w-4 text-white" />
+          </div>
+        )}
         <div>
-          <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-white">Desa Digital</p>
-          <p className="text-[8px] tracking-wider text-white/70">by Fibernode Internet</p>
+          <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-white">{branding.app_name || 'Desa Digital'}</p>
+          <p className="text-[8px] tracking-wider text-white/70">{branding.site_subtitle || 'by Fibernode Internet'}</p>
         </div>
       </div>
 
