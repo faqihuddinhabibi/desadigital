@@ -140,11 +140,11 @@ function UserForm({ user, onClose }: { user: User | null; onClose: () => void })
           </div>
           <div>
             <label className="text-sm font-medium">Username</label>
-            <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="input mt-1" required pattern="^[a-z0-9_]+$" title="Hanya huruf kecil, angka, dan underscore" />
+            <input type="text" value={username} onChange={(e) => setUsername(e.target.value.toLowerCase())} className="input mt-1" required minLength={3} pattern="^[a-z0-9_]+$" title="Hanya huruf kecil, angka, dan underscore" />
           </div>
           <div>
             <label className="text-sm font-medium">Password {user && '(kosongkan jika tidak diubah)'}</label>
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="input mt-1" {...(!user && { required: true })} minLength={8} />
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="input mt-1" {...(!user && { required: true })} minLength={6} />
           </div>
           <div>
             <label className="text-sm font-medium">Role</label>
@@ -164,6 +164,11 @@ function UserForm({ user, onClose }: { user: User | null; onClose: () => void })
                 placeholder="Pilih RT"
                 required
               />
+            </div>
+          )}
+          {mutation.isError && (
+            <div className="bg-destructive/10 border border-destructive/20 text-destructive px-3 py-2 rounded-lg text-sm">
+              {mutation.error?.message || 'Gagal menyimpan user. Silakan coba lagi.'}
             </div>
           )}
           <div className="flex gap-2 justify-end">
