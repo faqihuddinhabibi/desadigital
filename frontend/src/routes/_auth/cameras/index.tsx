@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../../lib/api';
-import { Camera, Plus, Search, X, Loader2, ChevronDown, Check, Wifi, WifiOff } from 'lucide-react';
+import { Camera, Plus, Search, X, Loader2, ChevronDown, Check, Wifi, WifiOff, Edit, Trash2 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../../hooks/useAuth';
 import type { PaginatedResponse, Camera as CameraType, RT, Desa } from '../../../types';
@@ -17,6 +17,13 @@ function CamerasPage() {
   const [desaFilter, setDesaFilter] = useState<string>('');
   const [page, setPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
+  const [editingCamera, setEditingCamera] = useState<CameraType | null>(null);
+  const queryClient = useQueryClient();
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/cameras/${id}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['cameras'] }),
+  });
 
   const { data: desas } = useQuery({
     queryKey: ['desas'],
@@ -102,36 +109,56 @@ function CamerasPage() {
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {data?.data.map((camera) => (
-              <Link
-                key={camera.id}
-                to="/cameras/$cameraId"
-                params={{ cameraId: camera.id }}
-                className="card p-0 overflow-hidden group hover:shadow-lg transition-all hover:scale-[1.02]"
-              >
-                <div className="aspect-video bg-muted relative">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Camera className="h-12 w-12 text-muted-foreground" />
+              <div key={camera.id} className="card p-0 overflow-hidden group hover:shadow-lg transition-all">
+                <Link
+                  to="/cameras/$cameraId"
+                  params={{ cameraId: camera.id }}
+                >
+                  <div className="aspect-video bg-muted relative">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Camera className="h-12 w-12 text-muted-foreground" />
+                    </div>
+                    {camera.status === 'offline' && (
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                        <span className="text-white text-sm font-medium">Camera Offline</span>
+                      </div>
+                    )}
+                    <div className="absolute top-2 right-2">
+                      <span className={`badge ${
+                        camera.status === 'online' ? 'badge-online' : 'badge-offline'
+                      }`}>
+                        {camera.status}
+                      </span>
+                    </div>
                   </div>
-                  {camera.status === 'offline' && (
-                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                      <span className="text-white text-sm font-medium">Camera Offline</span>
+                </Link>
+                <div className="p-3 flex items-start justify-between gap-2">
+                  <Link to="/cameras/$cameraId" params={{ cameraId: camera.id }} className="min-w-0 flex-1">
+                    <h3 className="font-medium truncate">{camera.name}</h3>
+                    <p className="text-sm text-muted-foreground truncate">
+                      {camera.location || camera.rtName || 'Lokasi tidak tersedia'}
+                    </p>
+                  </Link>
+                  {(user?.role === 'superadmin' || user?.role === 'admin_rt') && (
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => setEditingCamera(camera)}
+                        className="btn btn-ghost p-1.5 h-auto"
+                        title="Edit kamera"
+                      >
+                        <Edit className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => { if (confirm(`Hapus kamera "${camera.name}"?`)) deleteMutation.mutate(camera.id); }}
+                        className="btn btn-ghost p-1.5 h-auto text-destructive"
+                        title="Hapus kamera"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
                     </div>
                   )}
-                  <div className="absolute top-2 right-2">
-                    <span className={`badge ${
-                      camera.status === 'online' ? 'badge-online' : 'badge-offline'
-                    }`}>
-                      {camera.status}
-                    </span>
-                  </div>
                 </div>
-                <div className="p-3">
-                  <h3 className="font-medium truncate">{camera.name}</h3>
-                  <p className="text-sm text-muted-foreground truncate">
-                    {camera.location || camera.rtName || 'Lokasi tidak tersedia'}
-                  </p>
-                </div>
-              </Link>
+              </div>
             ))}
           </div>
 
@@ -160,6 +187,7 @@ function CamerasPage() {
       )}
 
       {showForm && <CameraForm onClose={() => setShowForm(false)} />}
+      {editingCamera && <EditCameraForm camera={editingCamera} onClose={() => setEditingCamera(null)} />}
     </div>
   );
 }
@@ -332,6 +360,82 @@ function CameraForm({ onClose }: { onClose: () => void }) {
           <div className="flex gap-2 justify-end mt-6 pt-4 border-t">
             <button type="button" onClick={onClose} className="btn btn-secondary">Batal</button>
             <button type="submit" disabled={mutation.isPending || !isConnected} className="btn btn-primary">
+              {mutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Simpan'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function EditCameraForm({ camera, onClose }: { camera: CameraType; onClose: () => void }) {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const [name, setName] = useState(camera.name);
+  const [location, setLocation] = useState(camera.location || '');
+  const [rtId, setRtId] = useState(camera.rtId || '');
+
+  const { data: rts } = useQuery({
+    queryKey: ['rts', 'all'],
+    queryFn: () => api.get<PaginatedResponse<RT>>('/rts?limit=100'),
+  });
+
+  const mutation = useMutation({
+    mutationFn: (data: { name: string; location?: string; rtId?: string }) =>
+      api.patch(`/cameras/${camera.id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cameras'] });
+      onClose();
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const data: { name: string; location?: string; rtId?: string } = { name };
+    if (location) data.location = location;
+    if (rtId) data.rtId = rtId;
+    mutation.mutate(data);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="card max-w-md w-full">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Edit Kamera</h2>
+          <button onClick={onClose} className="btn btn-ghost p-2">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="text-sm font-medium">Nama Kamera</label>
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="input mt-1" required />
+          </div>
+          <div>
+            <label className="text-sm font-medium">Lokasi</label>
+            <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} className="input mt-1" />
+          </div>
+          {user?.role === 'superadmin' && (
+            <div>
+              <label className="text-sm font-medium">Area (RT)</label>
+              <SearchableRTSelect
+                options={rts?.data || []}
+                value={rtId}
+                onChange={setRtId}
+                placeholder="Pilih RT"
+                required
+              />
+            </div>
+          )}
+          {mutation.isError && (
+            <div className="bg-destructive/10 border border-destructive/20 text-destructive px-3 py-2 rounded-lg text-sm">
+              {mutation.error?.message || 'Gagal menyimpan. Silakan coba lagi.'}
+            </div>
+          )}
+          <div className="flex gap-2 justify-end">
+            <button type="button" onClick={onClose} className="btn btn-secondary">Batal</button>
+            <button type="submit" disabled={mutation.isPending} className="btn btn-primary">
               {mutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Simpan'}
             </button>
           </div>

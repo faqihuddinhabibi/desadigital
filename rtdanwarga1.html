@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Multi-View 16-Camera Grid - Desa Digital</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2b8cee",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .pulse-dot {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+<!-- Top Navigation Bar -->
+<header class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-8 py-3 bg-white dark:bg-background-dark/50 backdrop-blur-md sticky top-0 z-50">
+<div class="flex items-center gap-3">
+<div class="bg-primary p-1.5 rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-xl">security</span>
+</div>
+<div>
+<h1 class="text-sm font-bold leading-tight tracking-tight uppercase text-primary">Desa Digital</h1>
+<p class="text-[10px] text-slate-500 dark:text-slate-400 font-medium tracking-widest">BY FIBERNODE INTERNET</p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg">
+<span class="material-symbols-outlined text-sm">schedule</span>
+<span class="text-sm font-semibold tracking-tighter">14:32:45</span>
+</div>
+<div class="flex gap-1">
+<button class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+<span class="material-symbols-outlined">light_mode</span>
+</button>
+<button class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+<span class="material-symbols-outlined text-primary">account_circle</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main 16-Camera Grid Container -->
+<main class="flex-grow p-4 lg:p-6 overflow-hidden flex flex-col items-center">
+<div class="w-full max-w-[1600px] h-full grid grid-cols-2 md:grid-cols-4 grid-rows-8 md:grid-rows-4 gap-3">
+<!-- Camera Feed 1 -->
+<div class="relative group aspect-video bg-slate-200 dark:bg-slate-900 rounded-lg overflow-hidden border border-transparent hover:border-primary transition-all duration-300">
+<div class="absolute inset-0 bg-cover bg-center opacity-80" data-alt="CCTV view of village main entrance" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCvrCVeMNTxVVcuV9C4Ctl-TiALXMoxs_D_XU0NJylV7AjS0JEloQCWDMJwyYqZ1hB7oQj43JtETdf6M7IjGCLRROGbOMiUx9DEzq0ZchORtcZ6EEXbiZaitYpcddXDZr2wucC-NN_VFztqYvXwGqQg3fqhG7eBi-V1-g7dFQ_2Cvww2-NTBMzRU3jvJrhgqXfIQ3ChzJhkw7kdoB4S-sVNYlqdfQoN1ffVDwupLS8y8S3yWIdSX-UV3U8ZyxA9_2jjCVCzmp_UANc');"></div>
+<div class="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm px-3 py-2 flex justify-between items-center">
+<span class="text-xs font-bold text-white uppercase tracking-wide truncate">Main Entrance</span>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot"></span>
+<span class="text-[10px] font-bold text-emerald-400 uppercase tracking-tighter">● ONLINE</span>
+</div>
+</div>
+</div>
+<!-- Camera Feed 2 -->
+<div class="relative group aspect-video bg-slate-200 dark:bg-slate-900 rounded-lg overflow-hidden border border-transparent hover:border-primary transition-all duration-300">
+<div class="absolute inset-0 bg-cover bg-center opacity-80" data-alt="CCTV view of public square fountain" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA0IxSjKAYXDXzL2765f0HA_xVzyXxS-t42vYMvstdlO-i5cDZeRCZ2ErmU2fSaXYB9gm2ylr01Pr7tS1okJ8-7wk8Sw6nYbAQR3pWiwocEDK90AaakealeFegIhowoqyMsM-hmxzbobsHEVSNJlYtp5wiup3PsZFaJz3Q0voSTkU_lpR-Arh-7eCEcbKH33ln9BmX0-5UkctMsPTQoU2np0hYTd1NTIYFUc_eX-4oNaOJVELfcFaYhAr-O3axoF6bUkH1uFrhDdLs');"></div>
+<div class="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm px-3 py-2 flex justify-between items-center">
+<span class="text-xs font-bold text-white uppercase tracking-wide truncate">Public Square</span>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot"></span>
+<span class="text-[10px] font-bold text-emerald-400 uppercase tracking-tighter">● ONLINE</span>
+</div>
+</div>
+</div>
+<!-- Camera Feed 3 -->
+<div class="relative group aspect-video bg-slate-200 dark:bg-slate-900 rounded-lg overflow-hidden border border-transparent hover:border-primary transition-all duration-300">
+<div class="absolute inset-0 bg-cover bg-center opacity-80" data-alt="CCTV view of north village gate" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAmtnnNgkP1x-EpRmjksj1h1o4vQYBcSMBrh32YLBDJwGEa7KsOoKmcZu8ebg-ZWsO7RcR_bi3Ku0yVYSF5mJipTXgZ1CRLT_NTqZ6ZbR8_mrKtm9iEEIw0ACnRMXAvt6H38pyvtNvmXm_TA4Wg7eUUKiQeSffvqAIngtN4hchK2NEAU1whgpKE1QzDpBw-RsUkC4n5MRvXY7jMVd0kelWdaJQmNGb_hpmGlmXEVqu5lb6AzfXIcnMXpJKxCHvufVb9EwUpDBlimQE');"></div>
+<div class="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm px-3 py-2 flex justify-between items-center">
+<span class="text-xs font-bold text-white uppercase tracking-wide truncate">North Gate</span>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot"></span>
+<span class="text-[10px] font-bold text-emerald-400 uppercase tracking-tighter">● ONLINE</span>
+</div>
+</div>
+</div>
+<!-- Camera Feed 4 -->
+<div class="relative group aspect-video bg-slate-200 dark:bg-slate-900 rounded-lg overflow-hidden border border-transparent hover:border-primary transition-all duration-300">
+<div class="absolute inset-0 bg-cover bg-center opacity-80" data-alt="CCTV view of west side alleyway" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuArBlcQyMZA0rgpMZWVeUC1bActFgQFhKTjVa8ETXLZD5pxqnvVKlkiGnmnMDuhlbWe0BFfrCt7lLb0z_QqGkDMO0cLQWsZBcNrdoLazgK64quQsU6aeADOq_zPqesBqB7du1PSV1bTVeDoAptFCsIvA-LLxyamwY6LIul_TRMqZpYYqtDG8p6ftdzF2gjire7hcTr6jkVsOzDGkCMgQ5R49eh-bkL50xZ-yyBGzHC776EA49cqPwcS75ePwwGFTh2ET-dHTqeyUHE');"></div>
+<div class="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm px-3 py-2 flex justify-between items-center">
+<span class="text-xs font-bold text-white uppercase tracking-wide truncate">West Alley</span>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot"></span>
+<span class="text-[10px] font-bold text-emerald-400 uppercase tracking-tighter">● ONLINE</span>
+</div>
+</div>
+</div>
+<!-- Feed 5-16 (Repeating logic for visual density) -->
+<!-- Camera Feed 5 -->
+<div class="relative group aspect-video bg-slate-200 dark:bg-slate-900 rounded-lg overflow-hidden border border-transparent hover:border-primary transition-all duration-300">
+<div class="absolute inset-0 bg-cover bg-center opacity-80" data-alt="CCTV view of community center hall" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA8meCZMoX40dKA0qYhYKeCAJgKnqIrAoLZXIhsLZrb8xpyTnmwsmslb_W4rdTwihdYp96ud5t6_aUqlA0a3OBo8d0jbdcZCO7A-oSjTaYd4OYlHFfJovQKM4AuB-dcHg-NKusWvHvY6Hv_b1LoY9Tl2gPtlIDaNdJEzfE5tODn5zlJq6m2TOsS2AWQqlI7KqVkksRnErpcUywdjgy3J1bWhGMR0I82kl83QcEYEJWkwysfxs4ZJlpPN3-KrMaMsfZ2AM2kRm-HmmE');"></div>
+<div class="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm px-3 py-2 flex justify-between items-center">
+<span class="text-xs font-bold text-white uppercase tracking-wide truncate">Comm. Center</span>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot"></span>
+<span class="text-[10px] font-bold text-emerald-400 uppercase tracking-tighter">● ONLINE</span>
+</div>
+</div>
+</div>
+<!-- Camera Feed 6 -->
+<div class="relative group aspect-video bg-slate-200 dark:bg-slate-900 rounded-lg overflow-hidden border border-transparent hover:border-primary transition-all duration-300">
+<div class="absolute inset-0 bg-cover bg-center opacity-80" data-alt="CCTV view of health clinic entrance" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAYYIdXXpcZGHd4O0yr89lMvpJJiyFYguPA-OA0yU59BtiUgoKKiX1EiF5no_YdJUxu8vqlvbbvE4lRP-3gw2wASSIu2H1-rPaMVqdKwORyIfvFxLdhq3Ilcd0enloRZ4tYsI872JoMmz70o3PI2DIPYGnXL5myIk4NEKbJ7vzrO59PAMbtlpk7VV5RmR5y61Eja6nGPWkugYS0FjdCzqv4PYew2s-ElEYRmid2WNMcMlavysIP74y1YJ23qIzZh21bbuAcfR8vpEw');"></div>
+<div class="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm px-3 py-2 flex justify-between items-center">
+<span class="text-xs font-bold text-white uppercase tracking-wide truncate">Health Clinic</span>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot"></span>
+<span class="text-[10px] font-bold text-emerald-400 uppercase tracking-tighter">● ONLINE</span>
+</div>
+</div>
+</div>
+<!-- Camera Feed 7 -->
+<div class="relative group aspect-video bg-slate-200 dark:bg-slate-900 rounded-lg overflow-hidden border border-transparent hover:border-primary transition-all duration-300">
+<div class="absolute inset-0 bg-cover bg-center opacity-80" data-alt="CCTV view of local school playground" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCdOfByFs-cCEdshmZdvBOSfI53TmBE94yOvftWxBvO-ecQuOBPJrmRD7gCsCnZIZrXlt-HBFtven494zcco0KitPyn3gl3i16eSha0-N4HoBP18s7nNiu_pfc0KqON1u2P9v9XLHzXumo4ZKe43j8Zxf0X0TU3CMCTanxPCF_TpcpIir63Gu1XTbslJNxPgX4e6oqn66OA_qreOtJakJ_rrDTd7m-Drjz0NQDy3ypMa9RlKeolJvmkVBawDV2AuXstii84eWQtSHE');"></div>
+<div class="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm px-3 py-2 flex justify-between items-center">
+<span class="text-xs font-bold text-white uppercase tracking-wide truncate">School Zone</span>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot"></span>
+<span class="text-[10px] font-bold text-emerald-400 uppercase tracking-tighter">● ONLINE</span>
+</div>
+</div>
+</div>
+<!-- Camera Feed 8 -->
+<div class="relative group aspect-video bg-slate-200 dark:bg-slate-900 rounded-lg overflow-hidden border border-transparent hover:border-primary transition-all duration-300">
+<div class="absolute inset-0 bg-cover bg-center opacity-80" data-alt="CCTV view of village hall lobby" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDA2BHz8VgIeHR7s2Ai3oHwQI4o8YaKrHKok7XX4SlncUuFuDPLnCHmwbzt59HMRN392fg5OZHXy-BGwmLYb4pVdSfy1a0kB3zdqSXEbhd9lFVrduyt7PnSKytIT_5QDNAiRX7o43CZVT4Ez6zk2ueNx97pysK8R2MzjbwJy-4TfUSog2SAnKeayJW_YS83wB8-mTDVcXJyPUkQHPP_8CWfUFmUVLbbjMQc2DhZWGtGjHYzWg2EICj7QjIXeu7ILlNclcK6oBe6SRc');"></div>
+<div class="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm px-3 py-2 flex justify-between items-center">
+<span class="text-xs font-bold text-white uppercase tracking-wide truncate">Village Hall</span>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot"></span>
+<span class="text-[10px] font-bold text-emerald-400 uppercase tracking-tighter">● ONLINE</span>
+</div>
+</div>
+</div>
+<!-- Camera Feed 9 -->
+<div class="relative group aspect-video bg-slate-200 dark:bg-slate-900 rounded-lg overflow-hidden border border-transparent hover:border-primary transition-all duration-300">
+<div class="absolute inset-0 bg-cover bg-center opacity-80" data-alt="CCTV view of east perimeter fence" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCFDTUT8drJ8jYQnFCs1qPP9f3ugdLibo8ITsbmmSzRICzu194TwkiwgrQJD0D-OgHZanB5SQUZC_XDZz9BuN7gbxI4k71ATvcPVfbAqJTg88q-nMS6qr8vu41Uu9L8_xNT-cKEp95YK40mrfx5WcUvwfTNQkZ5UnQWC8pWf_-H6410iERBJ2POU9yn_aDSzO1qQ6bC0qe3athbvCb7G7cxukIyfrn_Oz1JTMglSVP1D35ILbu6nriUNcbiTnQqvn4kIykRcIoRbVI');"></div>
+<div class="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm px-3 py-2 flex justify-between items-center">
+<span class="text-xs font-bold text-white uppercase tracking-wide truncate">East Perimeter</span>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot"></span>
+<span class="text-[10px] font-bold text-emerald-400 uppercase tracking-tighter">● ONLINE</span>
+</div>
+</div>
+</div>
+<!-- Camera Feed 10 -->
+<div class="relative group aspect-video bg-slate-200 dark:bg-slate-900 rounded-lg overflow-hidden border border-transparent hover:border-primary transition-all duration-300">
+<div class="absolute inset-0 bg-cover bg-center opacity-80" data-alt="CCTV view of busy market stalls" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuChLHCiAgvXhlzNDwlgzXeSOFWy9dkSAc0ygMW3PzO49Ak58XuLGbetk3E-0hoI4CZGSZsHWC7rLllZfK1pqvLocwM4d1mImNbz10O59PLaY7Apze7M_vS_LhEm3kcHMj_cCTpmKDIn2GQi1jnLGFPFq40Q1IfpTo21qMpNTOFbFJe24u0rfNa6AD4-siZ-IcXZ0fKI-FAlMCQSE-_QANAb0_QQy9sOOrABLjalmLVTgDLQr18Xj0csVfJ6PRF9KazhAGA2zSRbC2M');"></div>
+<div class="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm px-3 py-2 flex justify-between items-center">
+<span class="text-xs font-bold text-white uppercase tracking-wide truncate">Market Area</span>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot"></span>
+<span class="text-[10px] font-bold text-emerald-400 uppercase tracking-tighter">● ONLINE</span>
+</div>
+</div>
+</div>
+<!-- Camera Feed 11 -->
+<div class="relative group aspect-video bg-slate-200 dark:bg-slate-900 rounded-lg overflow-hidden border border-transparent hover:border-primary transition-all duration-300">
+<div class="absolute inset-0 bg-cover bg-center opacity-80" data-alt="CCTV view of parking lot A" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDeG_psJOMGtovWgrKnO4wC4ml1jVbXre1DjE4Ob8JiOZD3jCWu9sg91djsT1Tov44i4lhjgiSWgRNzpEBqs8UCVUTrgzOpt_E1E2PImiN1WvnSxW1uZwUVTJMxVbFHU6jW69qVEKztMWBwxFUkB6w9iVZbyRITSg0BLMV-XawNkYALyFH7yl9oq_dv6HyFju1T7rn2i46btCPZhVLgn6AX2jsCnIXrTzky4Ohr20WeU2DyahO4B7cTft5i-734vO5GmcqfAb_CAuk');"></div>
+<div class="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm px-3 py-2 flex justify-between items-center">
+<span class="text-xs font-bold text-white uppercase tracking-wide truncate">Parking Lot A</span>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot"></span>
+<span class="text-[10px] font-bold text-emerald-400 uppercase tracking-tighter">● ONLINE</span>
+</div>
+</div>
+</div>
+<!-- Camera Feed 12 -->
+<div class="relative group aspect-video bg-slate-200 dark:bg-slate-900 rounded-lg overflow-hidden border border-transparent hover:border-primary transition-all duration-300">
+<div class="absolute inset-0 bg-cover bg-center opacity-80" data-alt="CCTV view of water reservoir tanks" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC4lIzVIFbKGlHnkGVQHnGPKTD6ev7GRw-MOjMO_x-lCIDlkecOTHfs_8o58y8QiTNCpGVW91Lq1m0yODceos2OljSEhjB0AVSKjabvp_OFGiPe_XJMQEkSzlMBOgZNguxq9hBU31t_krzuqBc4YKRczNBiPmHlk9bubVDc6D-Mu3lJNzXVuLX3DxISD2GcYXzXsSLD8MkijibYNznpQYnwnmEAPG0Pn8tMFaIZdl8-4wPOFmqNIMK2QMhdczEP2_W7cMPDP6JIRxU');"></div>
+<div class="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm px-3 py-2 flex justify-between items-center">
+<span class="text-xs font-bold text-white uppercase tracking-wide truncate">Water Res.</span>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot"></span>
+<span class="text-[10px] font-bold text-emerald-400 uppercase tracking-tighter">● ONLINE</span>
+</div>
+</div>
+</div>
+<!-- Camera Feed 13 -->
+<div class="relative group aspect-video bg-slate-200 dark:bg-slate-900 rounded-lg overflow-hidden border border-transparent hover:border-primary transition-all duration-300">
+<div class="absolute inset-0 bg-cover bg-center opacity-80" data-alt="CCTV view of power substation 01" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBNyObPmCASmlD5ItTAMXb5XPt2ydvGKaPXQBHEbElxM4VR95gEd--CkB72hB7sQ_10YfeqS67r4JW3rG8HnEnwqXYJtmXakvUZvZN4BCV4u_xO4xCsGRV9mBeWDil9a5ottMPOi1_Mk6-QrCyviWjuDq_IihRkr-xRj6onw8gqc6GmssqCkn5zb-iyqSZ9ubzwiFwvUOc2ceS1YiZX1OwKMsq04B0lsw1CpG1-p1jWbEo-7MyOtM_xhbdXs58gV6ZhlUm8pygNndI');"></div>
+<div class="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm px-3 py-2 flex justify-between items-center">
+<span class="text-xs font-bold text-white uppercase tracking-wide truncate">Substation 01</span>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot"></span>
+<span class="text-[10px] font-bold text-emerald-400 uppercase tracking-tighter">● ONLINE</span>
+</div>
+</div>
+</div>
+<!-- Camera Feed 14 -->
+<div class="relative group aspect-video bg-slate-200 dark:bg-slate-900 rounded-lg overflow-hidden border border-transparent hover:border-primary transition-all duration-300">
+<div class="absolute inset-0 bg-cover bg-center opacity-80" data-alt="CCTV view of village park playground" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBVxDO4zgmOMpD4Qg3N8YEozg9lTrEqVMWi1T_lohtnpC2LFWuL3CqmoOKyCqsW8AZpof-bCJ8f7aq8ipuKZtjVrlcHdmGa_Dgh2_m0UgcjwQv7VLqb6G5CqF7u9gQfeXfsUaeDylCgMPxQglry9fQMENPAkHSqlH27JKy_0cfdTjdxynqbNLJVyPzKArem1IaIG40vI6tgU5UX-GKOjfgAn_7GHrdfKpdeAXNdusIvJHwaOLQFdzyCVVhCuEjH5fyabzr8yjneagA');"></div>
+<div class="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm px-3 py-2 flex justify-between items-center">
+<span class="text-xs font-bold text-white uppercase tracking-wide truncate">Playground</span>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot"></span>
+<span class="text-[10px] font-bold text-emerald-400 uppercase tracking-tighter">● ONLINE</span>
+</div>
+</div>
+</div>
+<!-- Camera Feed 15 -->
+<div class="relative group aspect-video bg-slate-200 dark:bg-slate-900 rounded-lg overflow-hidden border border-transparent hover:border-primary transition-all duration-300">
+<div class="absolute inset-0 bg-cover bg-center opacity-80" data-alt="CCTV view of south bridge crossing" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDZGzaE5PeLT1vz7NaAN4jWKQJugu5r_NGckTxGzh_WPg3EcIcPgO-XycLwEa1AAT1LX52mDD-ZLgWFDDF-Da1qZ9NC4tMUqs5486RuxH9f3vhE04dkNvthRCFmG3fM2mNjTI_8D5-sJ_JK0YleBphJE1r6pUsKt115pTfCoHQiXr896l2G0eGyhDggoXokHPF0_mC-lFWnB93En6z4iQ7ULisfi_QmwY2oNm7jEvH0WdqH8TQIvnBQPkGmyTJINE5uz39f_csB6zM');"></div>
+<div class="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm px-3 py-2 flex justify-between items-center">
+<span class="text-xs font-bold text-white uppercase tracking-wide truncate">South Bridge</span>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot"></span>
+<span class="text-[10px] font-bold text-emerald-400 uppercase tracking-tighter">● ONLINE</span>
+</div>
+</div>
+</div>
+<!-- Camera Feed 16 -->
+<div class="relative group aspect-video bg-slate-200 dark:bg-slate-900 rounded-lg overflow-hidden border border-transparent hover:border-primary transition-all duration-300">
+<div class="absolute inset-0 bg-cover bg-center opacity-80" data-alt="CCTV view of community farm fields" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBCXnI5qKBYo74407D4ffNzUfffhtWT-F5Rnlfm9Aft7vpLdFBXE99XSfQBrmzhrypawZO7UUHozsESixTlnybjkKSNLGSnanxRFhy3eMePZoKdmU0FISd56-51m0tuCQRJfJhbulhvPFqSHXVG-_K5lFBMh2gfY3oAO1wIlYaGXKU80XGmRAVpPM6jRK6OdZbUspUDG9h4UJ8LM2AgFGPhvq8gUU85s2n-I5fLgPuXfQqBATAwCl_9T_eCSyjJhg81kCw2KwsfnlI');"></div>
+<div class="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm px-3 py-2 flex justify-between items-center">
+<span class="text-xs font-bold text-white uppercase tracking-wide truncate">Farm View</span>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot"></span>
+<span class="text-[10px] font-bold text-emerald-400 uppercase tracking-tighter">● ONLINE</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Floating Bottom Control Bar -->
+<div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-2 p-2 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xl">
+<!-- Grid Selector -->
+<div class="flex items-center bg-slate-100 dark:bg-slate-900 rounded-lg p-1">
+<button class="flex items-center justify-center w-10 h-10 rounded-md text-slate-500 dark:text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">filter_1</span>
+</button>
+<button class="flex items-center justify-center w-10 h-10 rounded-md text-slate-500 dark:text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">grid_view</span>
+</button>
+<button class="flex items-center justify-center w-10 h-10 rounded-md text-slate-500 dark:text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">grid_3x3</span>
+</button>
+<button class="flex items-center justify-center w-10 h-10 rounded-md bg-primary text-white shadow-lg">
+<span class="material-symbols-outlined">grid_4x4</span>
+</button>
+</div>
+<div class="h-8 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
+<!-- Global Actions -->
+<div class="flex items-center gap-1">
+<button class="flex items-center gap-2 px-4 h-10 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-all font-bold text-sm">
+<span class="material-symbols-outlined text-[20px]">sync</span>
+<span>Refresh All</span>
+</button>
+<button class="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+<span class="material-symbols-outlined">zoom_in</span>
+</button>
+<button class="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+<span class="material-symbols-outlined">fullscreen</span>
+</button>
+<button class="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-rose-500">
+<span class="material-symbols-outlined">videocam_off</span>
+</button>
+</div>
+</div>
+</body></html>

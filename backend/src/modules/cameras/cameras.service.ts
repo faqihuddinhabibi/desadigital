@@ -183,12 +183,18 @@ export async function updateCamera(id: string, data: UpdateCameraInput, user: Jw
   return camera;
 }
 
-export async function deleteCamera(id: string) {
-  const [camera] = await db.delete(cameras).where(eq(cameras.id, id)).returning({ id: cameras.id });
+export async function deleteCamera(id: string, user: JwtPayload) {
+  const [existing] = await db.select().from(cameras).where(eq(cameras.id, id));
   
-  if (!camera) {
+  if (!existing) {
     throw createError('Camera not found', 404);
   }
+  
+  if (user.role !== 'superadmin' && existing.rtId !== user.rtId) {
+    throw createError('Access denied', 403);
+  }
+  
+  await db.delete(cameras).where(eq(cameras.id, id));
   
   return { message: 'Camera deleted successfully' };
 }

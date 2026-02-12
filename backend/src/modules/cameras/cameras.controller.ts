@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { createCameraSchema, updateCameraSchema, listCamerasQuerySchema } from './cameras.schema.js';
 import * as camerasService from './cameras.service.js';
 import { authMiddleware } from '../../middleware/auth.js';
-import { requireRole, requireSuperadmin } from '../../middleware/roleGuard.js';
+import { requireRole } from '../../middleware/roleGuard.js';
 
 const router = Router();
 
@@ -50,9 +50,13 @@ router.patch(
   }
 );
 
-router.delete('/:id', requireSuperadmin, async (req: Request, res: Response) => {
-  const result = await camerasService.deleteCamera(req.params.id as string);
-  res.json(result);
-});
+router.delete(
+  '/:id',
+  requireRole('superadmin', 'admin_rt'),
+  async (req: Request, res: Response) => {
+    const result = await camerasService.deleteCamera(req.params.id as string, req.user!);
+    res.json(result);
+  }
+);
 
 export const camerasRouter = router;
