@@ -231,6 +231,24 @@ Di panel DNS registrar domain Anda, buat:
 | A | @ | IP Server |
 | A | www | IP Server |
 
+### Let's Encrypt — Setup SSL
+
+> **Ini satu-satunya langkah tambahan yang perlu terminal** (selain install Docker).
+
+1. Di Proxmox → klik container `desa-digital` → **Console**, lalu jalankan:
+
+```bash
+cd /opt/stacks/desa-digital   # atau folder tempat repo di-clone
+bash scripts/setup-ssl.sh cctv.desaanda.com admin@email.com
+```
+
+> Jika deploy via Portainer dari Git, folder stack biasanya di `/data/compose/<ID_STACK>`.
+
+2. SSL akan otomatis aktif dan diperpanjang setiap 12 jam oleh Certbot
+3. Update environment: di Portainer → **Stacks** → `desa-digital` → scroll ke **Environment variables** → ubah:
+   - `CORS_ORIGIN=https://cctv.desaanda.com`
+4. Klik **Update the stack**
+
 ---
 
 ## ☁️ Cloudflare Tunnel (via UI)

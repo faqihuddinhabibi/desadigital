@@ -15,6 +15,16 @@ echo "🔒 Setting up SSL for $DOMAIN..."
 
 # Create SSL nginx config
 cat > nginx/conf.d/default.conf << EOF
+# Properly handle WebSocket Connection header
+map \$http_upgrade \$connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+
+# Docker internal DNS resolver — re-resolves when containers restart
+resolver 127.0.0.11 valid=30s ipv6=off;
+resolver_timeout 5s;
+
 server {
     listen 80;
     server_name $DOMAIN;
@@ -38,6 +48,13 @@ server {
     ssl_prefer_server_ciphers on;
     ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256;
 
+    # Allow file uploads up to 10MB (backend multer limit is 5MB)
+    client_max_body_size 10m;
+
+    # Upstream variables (forces DNS re-resolution per request)
+    set \$upstream_api http://desa-digital-api:4000;
+    set \$upstream_web http://desa-digital-web:3000;
+
     gzip on;
     gzip_vary on;
     gzip_min_length 1024;
@@ -49,7 +66,7 @@ server {
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
 
     location /api/ {
-        proxy_pass http://desa-digital-api:4000;
+        proxy_pass \$upstream_api;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -57,10 +74,10 @@ server {
     }
 
     location /ws/ {
-        proxy_pass http://desa-digital-api:4000;
+        proxy_pass \$upstream_api;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection "upgrade";
+        proxy_set_header Connection \$connection_upgrade;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -70,17 +87,20 @@ server {
     }
 
     location /health {
-        proxy_pass http://desa-digital-api:4000;
+        proxy_pass \$upstream_api;
     }
 
     location /streams/ {
-        proxy_pass http://desa-digital-api:4000;
+        proxy_pass \$upstream_api;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_buffering off;
     }
 
     location / {
-        proxy_pass http://desa-digital-web:3000;
+        proxy_pass \$upstream_web;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -99,8 +119,16 @@ docker compose -f docker-compose.prod.yml run --rm certbot certonly \
   --no-eff-email \
   -d $DOMAIN
 
-# Reload nginx
+# Reload nginx to apply SSL config
 docker compose -f docker-compose.prod.yml exec nginx-proxy nginx -s reload
+
+# Start certbot renewal service (auto-renew every 12 hours)
+echo "🔄 Starting Certbot auto-renewal service..."
+docker compose -f docker-compose.prod.yml --profile ssl up -d certbot
 
 echo "✅ SSL setup complete for $DOMAIN"
 echo "🌐 Your site is now available at https://$DOMAIN"
+echo ""
+echo "📝 Next steps:"
+echo "   1. Update CORS_ORIGIN to https://$DOMAIN in Portainer environment variables"
+echo "   2. Click 'Update the stack' in Portainer"

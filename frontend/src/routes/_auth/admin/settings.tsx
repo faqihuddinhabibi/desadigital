@@ -381,15 +381,18 @@ function DomainSettings() {
           <p><b>1.</b> Pastikan domain sudah diarahkan ke IP server (lihat tutorial DNS di atas)</p>
           <p><b>2.</b> Pastikan port <code>80</code> dan <code>443</code> terbuka di firewall</p>
           <p><b>3.</b> Pilih <b>Let's Encrypt</b> di form SSL di atas, lalu simpan</p>
-          <p><b>4.</b> Jalankan di server:</p>
+          <p><b>4.</b> Di Proxmox → klik container <code>desa-digital</code> → <b>Console</b>, lalu jalankan:</p>
           <div className="bg-muted p-2 rounded font-mono text-xs mt-1">
-            ./scripts/setup-ssl.sh {domain || 'cctv.desaanda.com'} admin@email.com
+            <p>cd /opt/stacks/desa-digital</p>
+            <p>bash scripts/setup-ssl.sh {domain || 'cctv.desaanda.com'} admin@email.com</p>
           </div>
+          <p className="text-xs text-muted-foreground mt-1">Jika menggunakan Portainer dari Git, folder stack biasanya di <code>/data/compose/</code> + ID stack. Bisa juga clone repo lalu jalankan script.</p>
           <p className="mt-2"><b>5.</b> SSL akan otomatis diperpanjang setiap 12 jam oleh Certbot</p>
-          <p className="mt-1"><b>6.</b> Update environment backend:</p>
+          <p className="mt-1"><b>6.</b> Di Portainer → Stacks → <code>desa-digital</code> → <b>Editor</b> → update environment:</p>
           <div className="bg-muted p-2 rounded font-mono text-xs mt-1">
             CORS_ORIGIN=https://{domain || 'cctv.desaanda.com'}
           </div>
+          <p className="mt-1"><b>7.</b> Klik <b>Update the stack</b></p>
         </Tutorial>
 
         <Tutorial title="Tutorial: Cloudflare Tunnel (Tanpa Buka Port)">
@@ -402,16 +405,14 @@ function DomainSettings() {
           <p><b>7.</b> Paste token di form di atas, lalu simpan</p>
           <p><b>8.</b> Di konfigurasi tunnel, tambahkan Public Hostname:</p>
           <div className="bg-muted p-2 rounded font-mono text-xs mt-1">
-            <p>Domain: {domain || 'cctv.desaanda.com'} → http://nginx-proxy:80</p>
+            <p>Domain: {domain || 'cctv.desaanda.com'} → http://desa-digital-proxy:80</p>
           </div>
-          <p className="mt-2"><b>9.</b> Update environment backend:</p>
+          <p className="mt-2"><b>9.</b> Di Portainer → Stacks → <code>desa-digital</code> → <b>Editor</b> → update environment:</p>
           <div className="bg-muted p-2 rounded font-mono text-xs mt-1">
-            CORS_ORIGIN=https://{domain || 'cctv.desaanda.com'}
+            <p>CORS_ORIGIN=https://{domain || 'cctv.desaanda.com'}</p>
+            <p>CLOUDFLARE_TUNNEL_TOKEN=eyJ...</p>
           </div>
-          <p className="mt-2"><b>10.</b> Jalankan Docker dengan profile cloudflare:</p>
-          <div className="bg-muted p-2 rounded font-mono text-xs mt-1">
-            docker compose -f docker-compose.prod.yml --profile cloudflare up -d
-          </div>
+          <p className="mt-1"><b>10.</b> Klik <b>Update the stack</b></p>
         </Tutorial>
       </div>
 
