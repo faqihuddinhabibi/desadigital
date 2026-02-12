@@ -66,7 +66,6 @@ services:
       - SSL_DOMAIN
       - SSL_EMAIL
     volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
       - certs_data:/etc/nginx/certs
       - certbot_data:/var/www/certbot
     depends_on:
