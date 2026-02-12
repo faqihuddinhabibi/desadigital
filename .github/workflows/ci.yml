@@ -58,8 +58,23 @@ jobs:
           JWT_REFRESH_SECRET: test-jwt-refresh-secret-min-32-chars
           ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 
-      - name: Build Frontend
+      - name: Build Frontend (workspace)
         run: npm run build --workspace=frontend
+
+      # Isolated builds: mimic Docker — catch missing deps in individual package.json
+      - name: Build Backend (isolated — like Docker)
+        run: |
+          cd backend
+          rm -rf node_modules
+          npm install
+          npm run build
+
+      - name: Build Frontend (isolated — like Docker)
+        run: |
+          cd frontend
+          rm -rf node_modules
+          npm install
+          npm run build
 
   docker-build:
     name: Docker Build Test
@@ -70,8 +85,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build Docker images
-        run: docker compose -f docker-compose.prod.yml build
+      - name: Build Docker images (no cache)
+        run: docker compose -f docker-compose.prod.yml build --no-cache
 
       - name: Verify images
         run: |
