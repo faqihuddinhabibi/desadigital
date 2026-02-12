@@ -55,16 +55,16 @@ services:
 
   # ── Nginx Reverse Proxy ──
   nginx-proxy:
-    image: nginx:alpine
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
     container_name: desa-digital-proxy
     restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./nginx/certs:/etc/nginx/certs
-      - ./nginx/html:/usr/share/nginx/html
+      - certs_data:/etc/nginx/certs
       - certbot_data:/var/www/certbot
     depends_on:
       - frontend
@@ -77,7 +77,7 @@ services:
     restart: unless-stopped
     volumes:
       - certbot_data:/var/www/certbot
-      - ./nginx/certs:/etc/letsencrypt
+      - certs_data:/etc/letsencrypt
     entrypoint: /bin/sh
     command: -c "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done"
     profiles:
@@ -96,7 +96,9 @@ services:
 
   # ── Daily Database Backup (02:00) ──
   db-backup:
-    image: postgres:16-alpine
+    build:
+      context: ./scripts
+      dockerfile: Dockerfile.backup
     container_name: desa-digital-backup
     restart: unless-stopped
     environment:
@@ -108,15 +110,6 @@ services:
       TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
     volumes:
       - backups_data:/backups
-      - ./scripts/backup.sh:/backup.sh:ro
-    entrypoint: /bin/sh
-    command: >
-      -c "apk add --no-cache curl &&
-      cp /backup.sh /usr/local/bin/backup.sh && chmod +x /usr/local/bin/backup.sh &&
-      echo '0 2 * * * /usr/local/bin/backup.sh >> /var/log/backup.log 2>&1' > /etc/crontabs/root &&
-      echo 'Backup cron scheduled at 02:00 daily' &&
-      /usr/local/bin/backup.sh &&
-      crond -f -l 2"
     depends_on:
       postgres:
         condition: service_healthy
@@ -133,6 +126,7 @@ services:
 
 volumes:
   postgres_data:
+  certs_data:
   certbot_data:
   streams_data:
   uploads_data:
