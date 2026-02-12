@@ -1,4 +1,4 @@
-import { eq, and, ilike, or, count } from 'drizzle-orm';
+import { eq, and, ilike, or, count, ne } from 'drizzle-orm';
 import { db } from '../../db/index.js';
 import { users, rts, desas } from '../../db/schema.js';
 import { hashPassword } from '../../utils/password.js';
@@ -141,11 +141,11 @@ export async function updateUser(id: string, data: UpdateUserInput) {
     throw createError('User not found', 404);
   }
   
-  if (data.username && data.username !== existing.username) {
+  if (data.username && data.username.toLowerCase() !== existing.username) {
     const [usernameExists] = await db
       .select()
       .from(users)
-      .where(eq(users.username, data.username.toLowerCase()));
+      .where(and(eq(users.username, data.username.toLowerCase()), ne(users.id, id)));
     
     if (usernameExists) {
       throw createError('Username sudah digunakan', 409);

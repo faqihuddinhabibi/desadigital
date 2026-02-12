@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { db } from '../../db/index.js';
 import { appSettings, monitoringEndpoints } from '../../db/schema.js';
 import { createError } from '../../middleware/errorHandler.js';
@@ -20,13 +20,24 @@ export async function getSetting(key: string) {
   return row?.value ?? null;
 }
 
-export async function setSetting(key: string, value: string | null) {
-  const [existing] = await db.select().from(appSettings).where(eq(appSettings.key, key));
-  if (existing) {
-    await db.update(appSettings).set({ value, updatedAt: new Date() }).where(eq(appSettings.key, key));
-  } else {
-    await db.insert(appSettings).values({ key, value });
+export async function getSettings(keys: string[]): Promise<Record<string, string | null>> {
+  if (keys.length === 0) return {};
+  const rows = await db.select().from(appSettings).where(inArray(appSettings.key, keys));
+  const result: Record<string, string | null> = {};
+  for (const key of keys) {
+    result[key] = rows.find(r => r.key === key)?.value ?? null;
   }
+  return result;
+}
+
+export async function setSetting(key: string, value: string | null) {
+  await db
+    .insert(appSettings)
+    .values({ key, value })
+    .onConflictDoUpdate({
+      target: appSettings.key,
+      set: { value, updatedAt: new Date() },
+    });
 }
 
 export async function updateSettings(data: UpdateSettingsInput) {

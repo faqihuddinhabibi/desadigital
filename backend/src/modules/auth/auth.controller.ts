@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { loginSchema, refreshTokenSchema } from './auth.schema.js';
+import { loginSchema, refreshTokenSchema, updateProfileSchema } from './auth.schema.js';
 import * as authService from './auth.service.js';
 import { authMiddleware } from '../../middleware/auth.js';
 import { rateLimit } from '../../middleware/rateLimit.js';
@@ -51,6 +51,12 @@ router.post('/logout', authMiddleware, async (req: Request, res: Response) => {
 
 router.get('/me', authMiddleware, async (req: Request, res: Response) => {
   const user = await authService.getMe(req.user!.sub);
+  res.json(user);
+});
+
+router.patch('/profile', authMiddleware, async (req: Request, res: Response) => {
+  const data = updateProfileSchema.parse(req.body);
+  const user = await authService.updateProfile(req.user!.sub, data);
   res.json(user);
 });
 

@@ -133,7 +133,7 @@ function ProfilePopup({ user, onClose }: { user: { id: string; name: string; use
 
   const mutation = useMutation({
     mutationFn: (data: { name?: string; password?: string }) =>
-      api.patch(`/users/${user?.id}`, data),
+      api.patch('/auth/profile', data),
     onSuccess: () => {
       setMessage({ type: 'success', text: 'Profil berhasil diperbarui' });
       setNewPassword('');

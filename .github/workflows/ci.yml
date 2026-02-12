@@ -50,7 +50,7 @@ jobs:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/desa_digital_test
 
       - name: Backend tests
-        run: npm run test --workspace=backend || true
+        run: npm run test --workspace=backend
         env:
           NODE_ENV: test
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/desa_digital_test

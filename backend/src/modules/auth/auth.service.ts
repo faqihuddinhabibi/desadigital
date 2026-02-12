@@ -183,6 +183,35 @@ export async function logout(userId: string, token?: string): Promise<void> {
   }
 }
 
+export async function updateProfile(userId: string, data: { name?: string; password?: string }) {
+  const updateData: Record<string, unknown> = { updatedAt: new Date() };
+
+  if (data.name) updateData.name = data.name;
+  if (data.password) {
+    const { hashPassword } = await import('../../utils/password.js');
+    updateData.passwordHash = await hashPassword(data.password);
+  }
+
+  if (Object.keys(updateData).length <= 1) {
+    throw createError('Tidak ada perubahan', 400);
+  }
+
+  const [user] = await db
+    .update(users)
+    .set(updateData)
+    .where(eq(users.id, userId))
+    .returning({
+      id: users.id,
+      username: users.username,
+      name: users.name,
+      role: users.role,
+      rtId: users.rtId,
+    });
+
+  if (!user) throw createError('User not found', 404);
+  return user;
+}
+
 export async function getMe(userId: string) {
   const [user] = await db
     .select({

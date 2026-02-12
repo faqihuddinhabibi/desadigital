@@ -464,7 +464,7 @@ function EditCameraForm({ camera, onClose }: { camera: CameraType; onClose: () =
   });
 
   const mutation = useMutation({
-    mutationFn: (data: { name: string; location?: string; rtId?: string }) =>
+    mutationFn: (data: { name: string; location?: string | null; rtId?: string }) =>
       api.patch(`/cameras/${camera.id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cameras'] });
@@ -474,9 +474,8 @@ function EditCameraForm({ camera, onClose }: { camera: CameraType; onClose: () =
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const data: { name: string; location?: string; rtId?: string } = { name };
-    if (location) data.location = location;
-    if (rtId) data.rtId = rtId;
+    const data: { name: string; location?: string | null; rtId?: string } = { name, location: location || null };
+    if (user?.role === 'superadmin' && rtId) data.rtId = rtId;
     mutation.mutate(data);
   };
 
