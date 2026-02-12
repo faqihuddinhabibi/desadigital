@@ -8,6 +8,8 @@ export const updateSettingsSchema = z.object({
   telegram_chat_id: z.string().optional().nullable(),
   telegram_enabled: z.boolean().optional(),
   app_name: z.string().optional(),
+  logo_url: z.string().optional().nullable(),
+  splash_logo_url: z.string().optional().nullable(),
 });
 
 export const updateEndpointSchema = z.object({

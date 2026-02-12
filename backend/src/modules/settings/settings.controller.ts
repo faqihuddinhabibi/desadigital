@@ -7,6 +7,21 @@ import { testTelegramConnection } from './telegram.service.js';
 
 export const settingsRouter = Router();
 
+// ── Public Branding (no auth needed — used by login page & splash) ──
+
+settingsRouter.get('/branding', async (_req, res, next) => {
+  try {
+    const keys = ['app_name', 'logo_url', 'splash_logo_url'];
+    const branding: Record<string, string | null> = {};
+    for (const key of keys) {
+      branding[key] = await settingsService.getSetting(key);
+    }
+    res.json(branding);
+  } catch (error) {
+    next(error);
+  }
+});
+
 // ── App Settings ──
 
 settingsRouter.get('/', authMiddleware, requireRole('superadmin'), async (_req, res, next) => {

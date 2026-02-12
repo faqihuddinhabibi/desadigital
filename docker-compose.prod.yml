@@ -28,8 +28,13 @@ services:
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
       CORS_ORIGIN: ${CORS_ORIGIN:-https://desadigital.fibernode.id}
       STREAMS_DIR: /app/streams
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-superadmin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin123!}
+      ADMIN_NAME: ${ADMIN_NAME:-Super Admin}
+      SEED_DEMO_DATA: ${SEED_DEMO_DATA:-false}
     volumes:
       - ./streams:/app/streams
+      - ./uploads:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -84,6 +89,33 @@ services:
       - backend
     profiles:
       - cloudflare
+
+  # Daily database backup (02:00 setiap hari)
+  db-backup:
+    image: postgres:16-alpine
+    container_name: desa-digital-backup
+    restart: unless-stopped
+    environment:
+      PGHOST: postgres
+      PGUSER: ${POSTGRES_USER:-postgres}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB:-desa_digital}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+    volumes:
+      - ./backups:/backups
+      - ./scripts/backup.sh:/backup.sh:ro
+    entrypoint: /bin/sh
+    command: >
+      -c "apk add --no-cache curl &&
+      cp /backup.sh /usr/local/bin/backup.sh && chmod +x /usr/local/bin/backup.sh &&
+      echo '0 2 * * * /usr/local/bin/backup.sh >> /var/log/backup.log 2>&1' > /etc/crontabs/root &&
+      echo 'Backup cron scheduled at 02:00 daily' &&
+      /usr/local/bin/backup.sh &&
+      crond -f -l 2"
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   ffmpeg-relay:
     image: linuxserver/ffmpeg:latest

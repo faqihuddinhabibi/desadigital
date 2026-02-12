@@ -19,6 +19,14 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [branding, setBranding] = useState<{ app_name: string | null; logo_url: string | null } | null>(null);
+
+  useEffect(() => {
+    fetch('/api/settings/branding')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => setBranding(data))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -43,6 +51,9 @@ function LoginPage() {
     }
   };
 
+  const logoUrl = branding?.logo_url;
+  const appName = branding?.app_name || 'Desa Digital';
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-muted to-background p-4">
       <div className="absolute top-4 right-4">
@@ -61,17 +72,21 @@ function LoginPage() {
 
       <div className="card w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-12 h-12 bg-[#ED1C24] rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-2xl">F</span>
+          {logoUrl ? (
+            <img src={logoUrl} alt={appName} className="w-16 h-16 object-contain mb-2" />
+          ) : (
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-12 h-12 bg-[#ED1C24] rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-2xl">F</span>
+              </div>
+              <span className="text-2xl font-bold tracking-tight">IBERNODE</span>
             </div>
-            <span className="text-2xl font-bold tracking-tight">IBERNODE</span>
-          </div>
+          )}
           <p className="text-sm text-muted-foreground italic">More Than Internet—A True Partner</p>
         </div>
 
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-semibold">Desa Digital</h1>
+          <h1 className="text-2xl font-semibold">{appName}</h1>
           <p className="text-muted-foreground">Monitoring CCTV</p>
         </div>
 

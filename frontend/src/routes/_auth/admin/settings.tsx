@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../../lib/api';
 import { useState, useEffect } from 'react';
-import { Save, Loader2, Send, Plus, Trash2, Play, RefreshCw, Globe, Shield, Bot, Activity, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { Save, Loader2, Send, Plus, Trash2, Play, RefreshCw, Globe, Shield, Bot, Activity, CheckCircle2, XCircle, Clock, Image, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
 
 export const Route = createFileRoute('/_auth/admin/settings')({
   component: SettingsPage,
@@ -28,9 +28,10 @@ interface SystemHealth {
 }
 
 function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<'domain' | 'telegram' | 'monitoring'>('domain');
+  const [activeTab, setActiveTab] = useState<'branding' | 'domain' | 'telegram' | 'monitoring'>('branding');
 
   const tabs = [
+    { id: 'branding' as const, label: 'Logo & Branding', icon: Image },
     { id: 'domain' as const, label: 'Domain & SSL', icon: Globe },
     { id: 'telegram' as const, label: 'Telegram Bot', icon: Bot },
     { id: 'monitoring' as const, label: 'Monitoring', icon: Activity },
@@ -43,12 +44,12 @@ function SettingsPage() {
         <p className="text-muted-foreground">Konfigurasi sistem Desa Digital</p>
       </div>
 
-      <div className="flex gap-2 border-b">
+      <div className="flex gap-1 border-b overflow-x-auto">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
               activeTab === tab.id
                 ? 'border-primary text-primary'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -60,9 +61,115 @@ function SettingsPage() {
         ))}
       </div>
 
+      {activeTab === 'branding' && <BrandingSettings />}
       {activeTab === 'domain' && <DomainSettings />}
       {activeTab === 'telegram' && <TelegramSettings />}
       {activeTab === 'monitoring' && <MonitoringSection />}
+    </div>
+  );
+}
+
+// ── Collapsible Tutorial ──
+
+function Tutorial({ title, children }: { title: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="border rounded-lg">
+      <button onClick={() => setOpen(!open)} className="flex items-center justify-between w-full p-3 text-sm font-medium hover:bg-muted/50 transition-colors">
+        <span className="flex items-center gap-2"><BookOpen className="h-4 w-4 text-primary" />{title}</span>
+        {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+      </button>
+      {open && <div className="px-3 pb-3 text-sm text-muted-foreground space-y-2">{children}</div>}
+    </div>
+  );
+}
+
+// ── Logo & Branding ──
+
+function BrandingSettings() {
+  const queryClient = useQueryClient();
+  const { data: settings, isLoading } = useQuery({
+    queryKey: ['settings'],
+    queryFn: () => api.get<Record<string, string | null>>('/settings'),
+  });
+
+  const [appName, setAppName] = useState('');
+  const [logoUrl, setLogoUrl] = useState('');
+  const [splashLogoUrl, setSplashLogoUrl] = useState('');
+
+  useEffect(() => {
+    if (settings) {
+      setAppName(settings.app_name || '');
+      setLogoUrl(settings.logo_url || '');
+      setSplashLogoUrl(settings.splash_logo_url || '');
+    }
+  }, [settings]);
+
+  const mutation = useMutation({
+    mutationFn: (data: Record<string, string | null>) => api.patch('/settings', data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['settings'] }),
+  });
+
+  const handleSave = () => {
+    mutation.mutate({
+      app_name: appName || null,
+      logo_url: logoUrl || null,
+      splash_logo_url: splashLogoUrl || null,
+    });
+  };
+
+  if (isLoading) return <div className="card p-8 text-center text-muted-foreground">Memuat...</div>;
+
+  return (
+    <div className="space-y-6">
+      <div className="card">
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <Image className="h-5 w-5" />
+          Logo & Nama Aplikasi
+        </h3>
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium">Nama Aplikasi</label>
+            <input type="text" value={appName} onChange={(e) => setAppName(e.target.value)} placeholder="Desa Digital" className="input mt-1" />
+            <p className="text-xs text-muted-foreground mt-1">Ditampilkan di halaman login, sidebar, dan splash screen</p>
+          </div>
+          <div>
+            <label className="text-sm font-medium">URL Logo (Login & Sidebar)</label>
+            <input type="url" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="https://example.com/logo.png" className="input mt-1" />
+            <p className="text-xs text-muted-foreground mt-1">Gunakan URL gambar PNG/SVG transparan. Ukuran rekomendasi: 200x200px</p>
+            {logoUrl && (
+              <div className="mt-2 p-3 bg-muted/50 rounded-lg inline-flex items-center gap-3">
+                <img src={logoUrl} alt="Preview" className="w-12 h-12 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                <span className="text-xs text-muted-foreground">Preview</span>
+              </div>
+            )}
+          </div>
+          <div>
+            <label className="text-sm font-medium">URL Logo Splash Screen</label>
+            <input type="url" value={splashLogoUrl} onChange={(e) => setSplashLogoUrl(e.target.value)} placeholder="https://example.com/splash-logo.png" className="input mt-1" />
+            <p className="text-xs text-muted-foreground mt-1">Opsional. Jika kosong, akan menggunakan logo utama di atas</p>
+            {splashLogoUrl && (
+              <div className="mt-2 p-3 bg-muted/50 rounded-lg inline-flex items-center gap-3">
+                <img src={splashLogoUrl} alt="Preview" className="w-16 h-16 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                <span className="text-xs text-muted-foreground">Preview</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-end">
+        <button onClick={handleSave} disabled={mutation.isPending} className="btn btn-primary">
+          {mutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+          Simpan
+        </button>
+      </div>
+      {mutation.isSuccess && (
+        <div className="p-3 rounded-lg bg-green-500/10 text-green-600 text-sm flex items-center gap-2">
+          <CheckCircle2 className="h-4 w-4" />
+          Branding berhasil disimpan. Refresh halaman untuk melihat perubahan.
+        </div>
+      )}
     </div>
   );
 }
@@ -113,16 +220,8 @@ function DomainSettings() {
         <div className="space-y-4">
           <div>
             <label className="text-sm font-medium">Domain</label>
-            <input
-              type="text"
-              value={domain}
-              onChange={(e) => setDomain(e.target.value)}
-              placeholder="desadigital.fibernode.id"
-              className="input mt-1"
-            />
-            <p className="text-xs text-muted-foreground mt-1">
-              Arahkan DNS A record ke IP server Anda, atau gunakan Cloudflare Tunnel
-            </p>
+            <input type="text" value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="cctv.desaanda.com" className="input mt-1" />
+            <p className="text-xs text-muted-foreground mt-1">Arahkan DNS A record ke IP server Anda, atau gunakan Cloudflare Tunnel</p>
           </div>
         </div>
       </div>
@@ -136,7 +235,7 @@ function DomainSettings() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {[
               { value: 'none', title: 'Tanpa SSL', desc: 'HTTP only (development)' },
-              { value: 'letsencrypt', title: "Let's Encrypt", desc: 'SSL gratis otomatis via Certbot' },
+              { value: 'letsencrypt', title: "Let's Encrypt", desc: 'SSL gratis & otomatis via Certbot' },
               { value: 'cloudflare_tunnel', title: 'Cloudflare Tunnel', desc: 'Tunnel aman tanpa expose port' },
             ].map((opt) => (
               <button
@@ -158,16 +257,7 @@ function DomainSettings() {
           {sslMethod === 'cloudflare_tunnel' && (
             <div>
               <label className="text-sm font-medium">Cloudflare Tunnel Token</label>
-              <input
-                type="password"
-                value={cfToken}
-                onChange={(e) => setCfToken(e.target.value)}
-                placeholder="eyJhIjoiNjk..."
-                className="input mt-1 font-mono"
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Buat tunnel di <a href="https://one.dash.cloudflare.com" target="_blank" rel="noreferrer" className="text-primary underline">Cloudflare Zero Trust</a> → Networks → Tunnels → Create tunnel → Copy token
-              </p>
+              <input type="password" value={cfToken} onChange={(e) => setCfToken(e.target.value)} placeholder="eyJhIjoiNjk..." className="input mt-1 font-mono" />
             </div>
           )}
 
@@ -177,6 +267,52 @@ function DomainSettings() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Tutorials */}
+      <div className="space-y-2">
+        <Tutorial title="Tutorial: Setting DNS untuk Domain Custom">
+          <p><b>1.</b> Beli domain dari registrar (Niagahoster, Hostinger, Namecheap, Cloudflare)</p>
+          <p><b>2.</b> Login ke panel DNS domain Anda</p>
+          <p><b>3.</b> Tambahkan DNS record:</p>
+          <div className="bg-muted p-2 rounded font-mono text-xs mt-1">
+            <p>Type: A | Name: @ | Value: IP_SERVER_ANDA | TTL: 300</p>
+            <p>Type: A | Name: www | Value: IP_SERVER_ANDA | TTL: 300</p>
+          </div>
+          <p className="mt-2"><b>4.</b> Tunggu propagasi DNS (5-30 menit)</p>
+          <p><b>5.</b> Masukkan domain di form di atas, lalu simpan</p>
+          <p><b>Cek propagasi:</b> <a href="https://dnschecker.org" target="_blank" rel="noreferrer" className="text-primary underline">dnschecker.org</a></p>
+        </Tutorial>
+
+        <Tutorial title="Tutorial: SSL Gratis & Otomatis (Let's Encrypt)">
+          <p>SSL sudah <b>gratis dan otomatis</b> dengan Let's Encrypt. Caranya:</p>
+          <p><b>1.</b> Pastikan domain sudah diarahkan ke IP server (lihat tutorial DNS di atas)</p>
+          <p><b>2.</b> Pastikan port <code>80</code> dan <code>443</code> terbuka di firewall</p>
+          <p><b>3.</b> Pilih <b>Let's Encrypt</b> di form SSL di atas, lalu simpan</p>
+          <p><b>4.</b> Jalankan di server:</p>
+          <div className="bg-muted p-2 rounded font-mono text-xs mt-1">
+            ./scripts/setup-ssl.sh cctv.desaanda.com admin@email.com
+          </div>
+          <p className="mt-2"><b>5.</b> SSL akan otomatis diperpanjang setiap 12 jam oleh Certbot</p>
+        </Tutorial>
+
+        <Tutorial title="Tutorial: Cloudflare Tunnel (Tanpa Buka Port)">
+          <p><b>1.</b> Buat akun Cloudflare gratis di <a href="https://dash.cloudflare.com" target="_blank" rel="noreferrer" className="text-primary underline">dash.cloudflare.com</a></p>
+          <p><b>2.</b> Pindahkan DNS domain ke Cloudflare (ikuti panduan di dashboard)</p>
+          <p><b>3.</b> Buka <a href="https://one.dash.cloudflare.com" target="_blank" rel="noreferrer" className="text-primary underline">Cloudflare Zero Trust</a></p>
+          <p><b>4.</b> Pergi ke <b>Networks → Tunnels → Create a tunnel</b></p>
+          <p><b>5.</b> Pilih <b>Cloudflared</b>, beri nama tunnel</p>
+          <p><b>6.</b> Copy token yang diberikan (mulai dengan <code>eyJ...</code>)</p>
+          <p><b>7.</b> Paste token di form di atas, lalu simpan</p>
+          <p><b>8.</b> Di konfigurasi tunnel, tambahkan Public Hostname:</p>
+          <div className="bg-muted p-2 rounded font-mono text-xs mt-1">
+            <p>Domain: cctv.desaanda.com → http://nginx-proxy:80</p>
+          </div>
+          <p className="mt-2"><b>9.</b> Jalankan Docker dengan profile cloudflare:</p>
+          <div className="bg-muted p-2 rounded font-mono text-xs mt-1">
+            docker compose -f docker-compose.prod.yml --profile cloudflare up -d
+          </div>
+        </Tutorial>
       </div>
 
       <div className="flex justify-end">
@@ -244,18 +380,13 @@ function TelegramSettings() {
           Telegram Bot
         </h3>
         <p className="text-sm text-muted-foreground mb-4">
-          Terima notifikasi realtime saat kamera offline, sistem error, dan lainnya melalui Telegram.
+          Terima notifikasi: kamera terputus/terhubung kembali (beserta daftar offline), dan backup database harian.
         </p>
 
         <div className="space-y-4">
           <div className="flex items-center gap-3">
             <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={enabled}
-                onChange={(e) => setEnabled(e.target.checked)}
-                className="sr-only peer"
-              />
+              <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} className="sr-only peer" />
               <div className="w-11 h-6 bg-muted rounded-full peer peer-checked:bg-primary transition-colors after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
             </label>
             <span className="text-sm font-medium">Aktifkan Notifikasi Telegram</span>
@@ -263,40 +394,33 @@ function TelegramSettings() {
 
           <div>
             <label className="text-sm font-medium">Bot Token</label>
-            <input
-              type="password"
-              value={botToken}
-              onChange={(e) => setBotToken(e.target.value)}
-              placeholder="123456789:ABCdefGHIjklMNOpqrSTUvwxYZ"
-              className="input mt-1 font-mono"
-            />
-            <p className="text-xs text-muted-foreground mt-1">
-              Buat bot via <a href="https://t.me/BotFather" target="_blank" rel="noreferrer" className="text-primary underline">@BotFather</a> di Telegram → /newbot → Copy token
-            </p>
+            <input type="password" value={botToken} onChange={(e) => setBotToken(e.target.value)} placeholder="123456789:ABCdefGHIjklMNOpqrSTUvwxYZ" className="input mt-1 font-mono" />
           </div>
 
           <div>
             <label className="text-sm font-medium">Chat ID</label>
-            <input
-              type="text"
-              value={chatId}
-              onChange={(e) => setChatId(e.target.value)}
-              placeholder="-1001234567890"
-              className="input mt-1 font-mono"
-            />
-            <p className="text-xs text-muted-foreground mt-1">
-              Gunakan <a href="https://t.me/userinfobot" target="_blank" rel="noreferrer" className="text-primary underline">@userinfobot</a> atau <a href="https://t.me/getmyid_bot" target="_blank" rel="noreferrer" className="text-primary underline">@getmyid_bot</a> untuk mendapatkan Chat ID
-            </p>
+            <input type="text" value={chatId} onChange={(e) => setChatId(e.target.value)} placeholder="-1001234567890" className="input mt-1 font-mono" />
           </div>
         </div>
       </div>
 
+      {/* Telegram Tutorial */}
+      <Tutorial title="Tutorial: Cara Membuat Bot Telegram">
+        <p><b>1.</b> Buka Telegram, cari <a href="https://t.me/BotFather" target="_blank" rel="noreferrer" className="text-primary underline">@BotFather</a></p>
+        <p><b>2.</b> Kirim <code>/newbot</code></p>
+        <p><b>3.</b> Masukkan nama bot (contoh: <code>Desa Digital Alert</code>)</p>
+        <p><b>4.</b> Masukkan username bot (contoh: <code>desadigital_alert_bot</code>)</p>
+        <p><b>5.</b> Copy <b>Bot Token</b> yang diberikan, paste di form di atas</p>
+        <p className="mt-2"><b>Mendapatkan Chat ID:</b></p>
+        <p><b>6.</b> Buat grup Telegram, tambahkan bot ke grup</p>
+        <p><b>7.</b> Kirim pesan apapun di grup</p>
+        <p><b>8.</b> Buka: <code>https://api.telegram.org/bot&lt;TOKEN&gt;/getUpdates</code></p>
+        <p><b>9.</b> Cari <code>"chat":{`{"id":-100xxx}`}</code> — itulah Chat ID Anda</p>
+        <p className="mt-2"><b>Atau gunakan bot:</b> <a href="https://t.me/userinfobot" target="_blank" rel="noreferrer" className="text-primary underline">@userinfobot</a> / <a href="https://t.me/getmyid_bot" target="_blank" rel="noreferrer" className="text-primary underline">@getmyid_bot</a></p>
+      </Tutorial>
+
       <div className="flex gap-2 justify-end">
-        <button
-          onClick={() => testMutation.mutate()}
-          disabled={!botToken || !chatId || testMutation.isPending}
-          className="btn btn-secondary"
-        >
+        <button onClick={() => testMutation.mutate()} disabled={!botToken || !chatId || testMutation.isPending} className="btn btn-secondary">
           {testMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
           Test Kirim
         </button>
@@ -308,20 +432,17 @@ function TelegramSettings() {
 
       {testMutation.isSuccess && (
         <div className="p-3 rounded-lg bg-green-500/10 text-green-600 text-sm flex items-center gap-2">
-          <CheckCircle2 className="h-4 w-4" />
-          Pesan test berhasil dikirim! Cek Telegram Anda.
+          <CheckCircle2 className="h-4 w-4" />Pesan test berhasil dikirim! Cek Telegram Anda.
         </div>
       )}
       {testMutation.isError && (
         <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm flex items-center gap-2">
-          <XCircle className="h-4 w-4" />
-          Gagal mengirim pesan. Pastikan Bot Token dan Chat ID benar.
+          <XCircle className="h-4 w-4" />Gagal mengirim pesan. Pastikan Bot Token dan Chat ID benar.
         </div>
       )}
       {saveMutation.isSuccess && (
         <div className="p-3 rounded-lg bg-green-500/10 text-green-600 text-sm flex items-center gap-2">
-          <CheckCircle2 className="h-4 w-4" />
-          Pengaturan Telegram disimpan
+          <CheckCircle2 className="h-4 w-4" />Pengaturan Telegram disimpan
         </div>
       )}
     </div>
@@ -362,7 +483,6 @@ function MonitoringSection() {
 
   return (
     <div className="space-y-6">
-      {/* System Health */}
       <div className="card">
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <Activity className="h-5 w-5" />
@@ -379,9 +499,7 @@ function MonitoringSection() {
                 )}
                 <div>
                   <div className="text-sm font-medium">{svc.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {svc.status === 'online' ? `${svc.responseMs}ms` : 'Offline'}
-                  </div>
+                  <div className="text-xs text-muted-foreground">{svc.status === 'online' ? `${svc.responseMs}ms` : 'Offline'}</div>
                 </div>
               </div>
             ))}
@@ -389,22 +507,16 @@ function MonitoringSection() {
         )}
       </div>
 
-      {/* Monitoring Endpoints */}
       <div className="card">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">Monitoring HTTP</h3>
           <div className="flex gap-2">
-            <button
-              onClick={() => checkAllMutation.mutate()}
-              disabled={checkAllMutation.isPending}
-              className="btn btn-secondary text-sm"
-            >
+            <button onClick={() => checkAllMutation.mutate()} disabled={checkAllMutation.isPending} className="btn btn-secondary text-sm">
               {checkAllMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <RefreshCw className="h-4 w-4 mr-1" />}
               Check Semua
             </button>
             <button onClick={() => setShowAdd(true)} className="btn btn-primary text-sm">
-              <Plus className="h-4 w-4 mr-1" />
-              Tambah
+              <Plus className="h-4 w-4 mr-1" />Tambah
             </button>
           </div>
         </div>
@@ -428,9 +540,7 @@ function MonitoringSection() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium truncate">{ep.name}</div>
-                  <div className="text-xs text-muted-foreground truncate">
-                    {ep.method} {ep.url}
-                  </div>
+                  <div className="text-xs text-muted-foreground truncate">{ep.method} {ep.url}</div>
                 </div>
                 <div className="text-right shrink-0 hidden sm:block">
                   {ep.lastStatus !== null && (
@@ -443,20 +553,10 @@ function MonitoringSection() {
                   )}
                 </div>
                 <div className="flex gap-1 shrink-0">
-                  <button
-                    onClick={() => checkOneMutation.mutate(ep.id)}
-                    disabled={checkOneMutation.isPending}
-                    className="btn btn-ghost p-2"
-                    title="Check sekarang"
-                  >
+                  <button onClick={() => checkOneMutation.mutate(ep.id)} disabled={checkOneMutation.isPending} className="btn btn-ghost p-2" title="Check sekarang">
                     <Play className="h-4 w-4" />
                   </button>
-                  <button
-                    onClick={() => deleteMutation.mutate(ep.id)}
-                    disabled={deleteMutation.isPending}
-                    className="btn btn-ghost p-2 text-destructive"
-                    title="Hapus"
-                  >
+                  <button onClick={() => deleteMutation.mutate(ep.id)} disabled={deleteMutation.isPending} className="btn btn-ghost p-2 text-destructive" title="Hapus">
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>

@@ -1,5 +1,7 @@
 import { getSetting } from './settings.service.js';
 
+const timestamp = () => new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
+
 export async function sendTelegramMessage(message: string) {
   const botToken = await getSetting('telegram_bot_token');
   const chatId = await getSetting('telegram_chat_id');
@@ -44,17 +46,40 @@ export async function testTelegramConnection(botToken: string, chatId: string) {
   }
 }
 
-export async function sendCameraOfflineAlert(cameraName: string, location: string) {
-  const message = `🔴 <b>Kamera Offline</b>\n\n📷 <b>${cameraName}</b>\n📍 ${location}\n🕐 ${new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })}`;
+// ── Camera Alerts with offline list ──
+
+export async function sendCameraOfflineAlert(cameraName: string, location: string, offlineList: string[]) {
+  let message = `🔴 <b>Kamera Terputus</b>\n\n📷 <b>${cameraName}</b>\n📍 ${location}\n🕐 ${timestamp()}`;
+  if (offlineList.length > 0) {
+    message += `\n\n📋 <b>Daftar kamera offline (${offlineList.length}):</b>`;
+    for (const name of offlineList) {
+      message += `\n  • ${name}`;
+    }
+  }
   return sendTelegramMessage(message);
 }
 
-export async function sendCameraOnlineAlert(cameraName: string, location: string) {
-  const message = `🟢 <b>Kamera Online</b>\n\n📷 <b>${cameraName}</b>\n📍 ${location}\n🕐 ${new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })}`;
+export async function sendCameraOnlineAlert(cameraName: string, location: string, offlineList: string[]) {
+  let message = `🟢 <b>Kamera Terhubung Kembali</b>\n\n📷 <b>${cameraName}</b>\n📍 ${location}\n🕐 ${timestamp()}`;
+  if (offlineList.length > 0) {
+    message += `\n\n📋 <b>Masih offline (${offlineList.length}):</b>`;
+    for (const name of offlineList) {
+      message += `\n  • ${name}`;
+    }
+  } else {
+    message += '\n\n✅ Semua kamera online!';
+  }
   return sendTelegramMessage(message);
 }
+
+// ── System Alerts ──
 
 export async function sendSystemAlert(title: string, detail: string) {
-  const message = `⚠️ <b>${title}</b>\n\n${detail}\n🕐 ${new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })}`;
+  const message = `⚠️ <b>${title}</b>\n\n${detail}\n🕐 ${timestamp()}`;
+  return sendTelegramMessage(message);
+}
+
+export async function sendBackupAlert(filename: string, size: string, totalBackups: number) {
+  const message = `💾 <b>Backup Database Berhasil</b>\n\n📁 File: <code>${filename}</code>\n📦 Ukuran: ${size}\n🗂 Total backup: ${totalBackups} file\n🕐 ${timestamp()}`;
   return sendTelegramMessage(message);
 }

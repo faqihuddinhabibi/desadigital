@@ -1,998 +1,546 @@
 # Desa Digital by Fibernode
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Node.js-22+-green?style=flat-square&logo=node.js" alt="Node.js" />
-  <img src="https://img.shields.io/badge/React-19-blue?style=flat-square&logo=react" alt="React" />
-  <img src="https://img.shields.io/badge/PostgreSQL-16-blue?style=flat-square&logo=postgresql" alt="PostgreSQL" />
-  <img src="https://img.shields.io/badge/Docker-Ready-blue?style=flat-square&logo=docker" alt="Docker" />
+  <img src="https://img.shields.io/badge/Docker-One_Command-blue?style=flat-square&logo=docker" alt="Docker" />
+  <img src="https://img.shields.io/badge/SSL-Free_&_Auto-green?style=flat-square&logo=letsencrypt" alt="SSL" />
+  <img src="https://img.shields.io/badge/Proxmox-Ready-orange?style=flat-square&logo=proxmox" alt="Proxmox" />
+  <img src="https://img.shields.io/badge/Telegram-Alerts-blue?style=flat-square&logo=telegram" alt="Telegram" />
 </p>
 
 **"More Than Internet—A True Partner"**
 
-Sistem Monitoring CCTV untuk pengelolaan dan pemantauan kamera keamanan di lingkungan desa. Mendukung multi-desa, multi-RT, dengan role-based access control.
+Sistem Monitoring CCTV untuk pengelolaan dan pemantauan kamera keamanan di lingkungan desa. Cukup jalankan **satu perintah Docker** dan semua langsung berjalan.
 
 ---
 
 ## 📋 Daftar Isi
 
 1. [Fitur Utama](#-fitur-utama)
-2. [Arsitektur Sistem](#-arsitektur-sistem)
-3. [Persyaratan Sistem](#-persyaratan-sistem)
-4. [Cara Mendapatkan Akses Repository](#-cara-mendapatkan-akses-repository)
-5. [Instalasi dengan Docker (Direkomendasikan)](#-instalasi-dengan-docker-direkomendasikan)
-6. [Instalasi Manual](#-instalasi-manual)
-7. [Konfigurasi Environment](#-konfigurasi-environment)
-8. [Konfigurasi Database](#-konfigurasi-database)
-9. [Menjalankan Aplikasi](#-menjalankan-aplikasi)
-10. [Akun Default & Manajemen User](#-akun-default--manajemen-user)
-11. [Menambahkan Kamera CCTV](#-menambahkan-kamera-cctv)
-12. [Deployment ke Production](#-deployment-ke-production)
-13. [Konfigurasi Domain & SSL](#-konfigurasi-domain--ssl)
-14. [Troubleshooting](#-troubleshooting)
-15. [Kontak Support](#-kontak-support)
+2. [Arsitektur & Port](#-arsitektur--port)
+3. [Instalasi di Proxmox (Docker LXC)](#-instalasi-di-proxmox-docker-lxc)
+4. [Konfigurasi Environment (.env)](#-konfigurasi-environment-env)
+5. [Menjalankan Aplikasi](#-menjalankan-aplikasi)
+6. [Akun Superadmin](#-akun-superadmin)
+7. [Domain Custom & SSL Gratis](#-domain-custom--ssl-gratis)
+8. [Cloudflare Tunnel (Tanpa Buka Port)](#-cloudflare-tunnel-tanpa-buka-port)
+9. [Bot Telegram (Notifikasi)](#-bot-telegram-notifikasi)
+10. [Backup & Restore Database](#-backup--restore-database)
+11. [Logo & Branding](#-logo--branding)
+12. [Menambahkan Kamera CCTV](#-menambahkan-kamera-cctv)
+13. [Troubleshooting](#-troubleshooting)
+14. [Kontak Support](#-kontak-support)
 
 ---
 
 ## ✨ Fitur Utama
 
-- 📹 **Live Streaming CCTV** - Pantau kamera secara real-time dengan HLS streaming
-- 🏘️ **Multi-Desa & Multi-RT** - Kelola banyak desa dan RT dalam satu sistem
-- 👥 **Role-Based Access** - 3 level akses: Superadmin, Admin RT, Warga
-- 🌓 **Dark/Light Mode** - Tampilan yang nyaman di berbagai kondisi
-- 📱 **Responsive Design** - Bisa diakses dari HP, tablet, atau komputer
-- 🔒 **Keamanan** - JWT authentication dengan refresh token
-- 🐳 **Docker Ready** - Mudah di-deploy dengan Docker
+- 📹 **Live Streaming CCTV** — Pantau kamera real-time dengan HLS
+- 🏘️ **Multi-Desa & Multi-RT** — Kelola banyak desa/RT dalam satu sistem
+- 👥 **Role-Based Access** — Superadmin, Admin RT, Warga
+- 🌓 **Dark/Light Mode** — Nyaman di berbagai kondisi
+- 📱 **PWA & Responsive** — Bisa di-install di HP
+- 🔒 **SSL Otomatis & Gratis** — Let's Encrypt atau Cloudflare Tunnel
+- 🤖 **Bot Telegram** — Notifikasi kamera offline/online + backup harian
+- 💾 **Auto Backup** — Database di-backup otomatis setiap hari
+- 🎨 **Logo & Branding** — Ganti logo dan nama aplikasi dari menu setting
+- 🖥️ **Splash Screen** — 3 detik loading screen dengan logo custom
+- 📊 **Monitoring Dashboard** — Pantau kesehatan sistem & HTTP endpoints
+- 🐳 **One Command Deploy** — Cukup `docker compose up -d`
 
 ---
 
-## 🏗️ Arsitektur Sistem
+## 🏗️ Arsitektur & Port
 
 ```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   CCTV Camera   │────▶│  FFmpeg Relay   │────▶│   HLS Stream    │
-│    (RTSP)       │     │  (Transcoding)  │     │   (.m3u8)       │
-└─────────────────┘     └─────────────────┘     └────────┬────────┘
-                                                         │
-┌─────────────────┐     ┌─────────────────┐              │
-│    Frontend     │◀────│    Backend      │◀─────────────┘
-│   (React 19)    │     │  (Express.js)   │
-│   Port: 3000    │     │   Port: 4000    │
-└─────────────────┘     └────────┬────────┘
-                                 │
-                        ┌────────▼────────┐
-                        │   PostgreSQL    │
-                        │   Port: 5432    │
-                        └─────────────────┘
+Internet
+   │
+   ├─ Port 80/443 ──▶ Nginx Proxy ──▶ Frontend (React) :3000
+   │                        │
+   │                        └────────▶ Backend API (Express) :4000
+   │
+   └─ (Opsional) ───▶ Cloudflare Tunnel
 ```
 
-### Tech Stack
+### Daftar Service & Port
 
-| Layer | Teknologi |
-|-------|-----------|
-| **Frontend** | React 19, TanStack Router, TanStack Query, TailwindCSS 4, HLS.js |
-| **Backend** | Node.js 22, Express.js 5, Drizzle ORM, Zod, Pino |
-| **Database** | PostgreSQL 16 |
-| **Streaming** | FFmpeg, HLS (HTTP Live Streaming) |
-| **Container** | Docker, Docker Compose |
+| Service | Container | Port Internal | Port Expose | Keterangan |
+|---------|-----------|:---:|:---:|------------|
+| **Nginx Proxy** | desa-digital-proxy | 80, 443 | **80, 443** | Satu-satunya port yg terbuka |
+| **Frontend** | desa-digital-web | 3000 | — | Di-proxy oleh Nginx |
+| **Backend API** | desa-digital-api | 4000 | — | Di-proxy oleh Nginx |
+| **PostgreSQL** | desa-digital-db | 5432 | — | Tidak expose ke luar |
+| **FFmpeg** | desa-digital-ffmpeg | — | — | Transcoding CCTV |
+| **Certbot** | desa-digital-certbot | — | — | Auto-renew SSL |
+| **DB Backup** | desa-digital-backup | — | — | Backup harian 02:00 |
+| **Watchtower** | desa-digital-watchtower | — | — | Auto-update images |
 
----
-
-## 💻 Persyaratan Sistem
-
-### Minimum (Development)
-- **OS:** Windows 10/11, macOS 10.15+, atau Ubuntu 20.04+
-- **RAM:** 4 GB
-- **Storage:** 10 GB
-- **CPU:** 2 Core
-
-### Recommended (Production)
-- **OS:** Ubuntu 22.04 LTS
-- **RAM:** 8 GB
-- **Storage:** 50 GB SSD
-- **CPU:** 4 Core
-- **Bandwidth:** 100 Mbps (tergantung jumlah kamera)
-
-### Software yang Dibutuhkan
-
-| Software | Versi | Keterangan |
-|----------|-------|------------|
-| Docker | 24+ | **Wajib** untuk instalasi dengan Docker |
-| Docker Compose | 2.20+ | **Wajib** untuk instalasi dengan Docker |
-| Node.js | 22+ | **Wajib** untuk instalasi manual |
-| PostgreSQL | 16+ | **Wajib** untuk instalasi manual |
-| Git | 2.30+ | **Wajib** untuk clone repository |
+> **Yang perlu dibuka di firewall: hanya port 80 dan 443.**
 
 ---
 
-## 🔑 Cara Mendapatkan Akses Repository
+## 🐳 Instalasi di Proxmox (Docker LXC)
 
-Repository ini bersifat **private**. Ikuti langkah berikut untuk mendapatkan akses:
+Anda menggunakan Proxmox? Langsung buat container Docker. Tidak perlu install Linux terpisah.
 
-### Langkah 1: Buat Akun GitHub (Jika Belum Punya)
+### Langkah 1: Buat LXC Container di Proxmox
 
-1. Buka https://github.com
-2. Klik **"Sign up"**
-3. Isi form pendaftaran dengan email aktif Anda
-4. Verifikasi email Anda
+1. Buka **Proxmox Web UI** → klik **Create CT**
+2. Isi konfigurasi:
+   - **Template:** `ubuntu-22.04-standard` (download dulu di local storage)
+   - **Hostname:** `desa-digital`
+   - **RAM:** 4096 MB (minimum), 8192 MB (rekomendasi)
+   - **CPU:** 2 core (minimum), 4 core (rekomendasi)
+   - **Disk:** 50 GB
+   - **Network:** Bridge ke jaringan Anda (DHCP atau static IP)
+3. ✅ Centang **Nesting** di tab Features (wajib untuk Docker)
+4. Klik **Create**, lalu **Start**
 
-### Langkah 2: Kirim Username GitHub Anda
+### Langkah 2: Install Docker di LXC
 
-Kirim **username GitHub** Anda ke tim Fibernode melalui:
-- 📧 Email: support@fibernode.id
-- 📱 WhatsApp: +62 xxx-xxxx-xxxx
-
-Tim kami akan mengirimkan undangan kolaborator ke repository.
-
-### Langkah 3: Terima Undangan
-
-1. Buka email dari GitHub dengan subjek "Invitation to collaborate"
-2. Klik **"View invitation"**
-3. Klik **"Accept invitation"**
-
-### Langkah 4: Generate Personal Access Token (PAT)
-
-Token ini digunakan untuk clone repository via command line.
-
-1. Login ke GitHub
-2. Klik foto profil (kanan atas) → **Settings**
-3. Scroll ke bawah, klik **Developer settings** (sidebar kiri)
-4. Klik **Personal access tokens** → **Tokens (classic)**
-5. Klik **Generate new token** → **Generate new token (classic)**
-6. Isi:
-   - **Note:** `Desa Digital Access`
-   - **Expiration:** 90 days (atau sesuai kebutuhan)
-   - **Scopes:** Centang `repo` (full control of private repositories)
-7. Klik **Generate token**
-8. ⚠️ **PENTING:** Salin token yang muncul dan simpan di tempat aman! Token hanya ditampilkan sekali.
-
-### Langkah 5: Clone Repository
+Masuk ke console LXC (klik container → Console), lalu jalankan:
 
 ```bash
-# Clone dengan HTTPS (akan diminta username & token)
-git clone https://github.com/faqihuddinhabibi/desadigital.git
+# Update sistem
+apt update && apt upgrade -y
 
-# Saat diminta password, masukkan Personal Access Token (bukan password GitHub)
-```
+# Install Docker (satu perintah)
+curl -fsSL https://get.docker.com | sh
 
-Atau gunakan format langsung dengan token:
-```bash
-git clone https://<USERNAME>:<TOKEN>@github.com/faqihuddinhabibi/desadigital.git
-```
-
----
-
-## 🐳 Instalasi dengan Docker (Direkomendasikan)
-
-Cara termudah untuk menjalankan aplikasi adalah menggunakan Docker. Semua dependency termasuk PostgreSQL akan otomatis terinstall.
-
-### Langkah 1: Install Docker
-
-#### Windows
-1. Download Docker Desktop: https://www.docker.com/products/docker-desktop
-2. Jalankan installer dan ikuti petunjuk
-3. Restart komputer
-4. Buka Docker Desktop dan tunggu sampai running
-
-#### macOS
-1. Download Docker Desktop: https://www.docker.com/products/docker-desktop
-2. Drag ke folder Applications
-3. Buka Docker dan ikuti petunjuk setup
-4. Tunggu sampai Docker running (icon di menu bar)
-
-#### Ubuntu/Linux
-```bash
-# Update package index
-sudo apt-get update
-
-# Install dependencies
-sudo apt-get install -y ca-certificates curl gnupg
-
-# Add Docker's official GPG key
-sudo install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-sudo chmod a+r /etc/apt/keyrings/docker.gpg
-
-# Add the repository
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-# Install Docker
-sudo apt-get update
-sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
-# Add user to docker group (agar tidak perlu sudo)
-sudo usermod -aG docker $USER
-
-# Logout dan login kembali, atau jalankan:
-newgrp docker
-
-# Verifikasi instalasi
+# Verifikasi
 docker --version
 docker compose version
 ```
 
-### Langkah 2: Clone Repository
+### Langkah 3: Clone Repository
 
 ```bash
-cd ~
+cd /opt
 git clone https://github.com/faqihuddinhabibi/desadigital.git
 cd desadigital
 ```
 
-### Langkah 3: Konfigurasi Environment (Opsional)
+> **Butuh akses?** Repository ini private. Kirim username GitHub Anda ke tim Fibernode untuk mendapatkan undangan.
 
-Untuk development, konfigurasi default sudah cukup. Untuk production, edit file berikut:
+### Langkah 4: Buat File .env
 
 ```bash
-# Salin file contoh environment
-cp backend/.env.example backend/.env
-
-# Edit sesuai kebutuhan (lihat bagian Konfigurasi Environment)
-nano backend/.env
+cp .env.example .env
+nano .env
 ```
 
-### Langkah 4: Jalankan dengan Docker Compose
+Lihat bagian [Konfigurasi Environment](#-konfigurasi-environment-env) di bawah.
+
+### Langkah 5: Jalankan!
 
 ```bash
-# Build dan jalankan semua service
-docker compose up --build -d
+# Satu perintah untuk semua service
+docker compose -f docker-compose.prod.yml up -d
 
-# Lihat status container
-docker compose ps
+# Lihat status
+docker compose -f docker-compose.prod.yml ps
 
 # Lihat logs
-docker compose logs -f
+docker compose -f docker-compose.prod.yml logs -f
 ```
 
-### Langkah 5: Akses Aplikasi
-
-- **Frontend:** http://localhost:3000
-- **Backend API:** http://localhost:4000
-- **Health Check:** http://localhost:4000/health
-
-### Perintah Docker Berguna
-
-```bash
-# Stop semua service
-docker compose down
-
-# Stop dan hapus data (termasuk database)
-docker compose down -v
-
-# Restart service tertentu
-docker compose restart backend
-
-# Lihat logs service tertentu
-docker compose logs -f backend
-
-# Masuk ke container
-docker compose exec backend sh
-docker compose exec postgres psql -U postgres -d desa_digital
-```
+**Selesai!** Buka `http://IP_CONTAINER` di browser.
 
 ---
 
-## 🔧 Instalasi Manual
+## ⚙️ Konfigurasi Environment (.env)
 
-Jika tidak ingin menggunakan Docker, ikuti langkah berikut.
+Buat file `.env` di root folder project:
 
-### Langkah 1: Install Node.js 22
-
-#### Windows/macOS
-Download dari https://nodejs.org (pilih versi LTS 22.x)
-
-#### Ubuntu/Linux
-```bash
-# Install Node.js 22 menggunakan NodeSource
-curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-sudo apt-get install -y nodejs
-
-# Verifikasi
-node --version  # Harus v22.x.x
-npm --version
-```
-
-### Langkah 2: Install PostgreSQL 16
-
-#### Windows
-1. Download dari https://www.postgresql.org/download/windows/
-2. Jalankan installer
-3. Catat password untuk user `postgres`
-4. Port default: 5432
-
-#### macOS
-```bash
-# Menggunakan Homebrew
-brew install postgresql@16
-brew services start postgresql@16
-```
-
-#### Ubuntu/Linux
-```bash
-# Add PostgreSQL repository
-sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
-wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-sudo apt-get update
-
-# Install PostgreSQL 16
-sudo apt-get install -y postgresql-16
-
-# Start service
-sudo systemctl start postgresql
-sudo systemctl enable postgresql
-
-# Set password untuk user postgres
-sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
-```
-
-### Langkah 3: Buat Database
-
-```bash
-# Masuk ke PostgreSQL
-sudo -u postgres psql
-
-# Di dalam psql, jalankan:
-CREATE DATABASE desa_digital;
-\q
-```
-
-### Langkah 4: Clone dan Setup Project
-
-```bash
-# Clone repository
-cd ~
-git clone https://github.com/faqihuddinhabibi/desadigital.git
-cd desadigital
-
-# Install dependencies untuk semua packages
-npm install
-```
-
-### Langkah 5: Konfigurasi Environment
-
-```bash
-# Backend
-cp backend/.env.example backend/.env
-nano backend/.env
-```
-
-Edit file `backend/.env`:
 ```env
-NODE_ENV=development
-PORT=4000
+# ── Database ──
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=GantiDenganPasswordKuat123!
+POSTGRES_DB=desa_digital
 
-# Database - sesuaikan dengan konfigurasi PostgreSQL Anda
-DATABASE_URL=postgres://postgres:postgres@localhost:5432/desa_digital
+# ── Security (WAJIB diganti untuk production!) ──
+# Generate dengan: openssl rand -hex 32
+JWT_SECRET=paste_hasil_openssl_rand_hex_32_pertama
+JWT_REFRESH_SECRET=paste_hasil_openssl_rand_hex_32_kedua
+ENCRYPTION_KEY=paste_hasil_openssl_rand_hex_32_ketiga
 
-# JWT Secrets - GANTI untuk production!
-JWT_SECRET=ganti-dengan-string-acak-minimal-32-karakter
-JWT_REFRESH_SECRET=ganti-dengan-string-acak-berbeda-minimal-32-karakter
+# ── Domain & CORS ──
+# Tanpa domain (akses via IP): http://IP_SERVER
+# Dengan domain: https://cctv.desaanda.com
+CORS_ORIGIN=http://IP_SERVER
 
-# Encryption Key - HARUS 64 karakter hexadecimal
-ENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+# ── Akun Superadmin (dibuat otomatis saat pertama kali) ──
+ADMIN_USERNAME=superadmin
+ADMIN_PASSWORD=PasswordKuatAnda123!
+ADMIN_NAME=Super Admin
 
-# CORS
-CORS_ORIGIN=http://localhost:3000
+# ── Data Demo (true = isi contoh desa/RT/kamera, false = kosong) ──
+SEED_DEMO_DATA=false
 
-# Logging
-LOG_LEVEL=info
+# ── Docker Hub (untuk auto-update) ──
+DOCKERHUB_USERNAME=faqihuddinhabibi
 
-# Streams directory
-STREAMS_DIR=./streams
+# ── Telegram (opsional, bisa diisi dari menu Setting di UI) ──
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=
+
+# ── Cloudflare Tunnel (opsional) ──
+CLOUDFLARE_TUNNEL_TOKEN=
 ```
+
+### Generate Secret Keys
 
 ```bash
-# Frontend
-cp frontend/.env.example frontend/.env
-nano frontend/.env
-```
-
-Edit file `frontend/.env`:
-```env
-VITE_API_URL=http://localhost:4000
-VITE_APP_NAME=Desa Digital
-```
-
-### Langkah 6: Jalankan Migrasi Database
-
-```bash
-# Jalankan migrasi untuk membuat tabel
-npm run db:migrate --workspace=backend
-
-# Isi data awal (superadmin)
-npm run db:seed --workspace=backend
-```
-
-### Langkah 7: Jalankan Aplikasi
-
-```bash
-# Terminal 1 - Backend
-cd backend
-npm run dev
-
-# Terminal 2 - Frontend
-cd frontend
-npm run dev
-```
-
----
-
-## ⚙️ Konfigurasi Environment
-
-### Backend Environment Variables
-
-| Variable | Deskripsi | Development | Production |
-|----------|-----------|-------------|------------|
-| `NODE_ENV` | Mode aplikasi | `development` | `production` |
-| `PORT` | Port backend | `4000` | `4000` |
-| `DATABASE_URL` | Connection PostgreSQL | `postgres://postgres:postgres@postgres:5432/desa_digital` | Ganti password! |
-| `JWT_SECRET` | Secret access token | `dev-jwt-secret...` | **Wajib diganti!** |
-| `JWT_REFRESH_SECRET` | Secret refresh token | `dev-jwt-refresh...` | **Wajib diganti!** |
-| `ENCRYPTION_KEY` | Key enkripsi RTSP (64 hex) | Default dev key | **Wajib diganti!** |
-| `CORS_ORIGIN` | URL frontend | `http://localhost:3000` | `https://domain-anda.com` |
-| `LOG_LEVEL` | Level logging | `debug` | `info` |
-
-### Frontend Environment Variables
-
-| Variable | Deskripsi | Development | Production |
-|----------|-----------|-------------|------------|
-| `VITE_API_URL` | URL backend API | `http://localhost:4000` | `https://api.domain-anda.com` |
-
-### Contoh Konfigurasi Development (Default)
-
-File `backend/.env`:
-```env
-NODE_ENV=development
-PORT=4000
-DATABASE_URL=postgres://postgres:postgres@postgres:5432/desa_digital
-JWT_SECRET=dev-jwt-secret-change-in-production
-JWT_REFRESH_SECRET=dev-jwt-refresh-secret-change-in-production
-ENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
-CORS_ORIGIN=http://localhost:3000
-LOG_LEVEL=debug
-STREAMS_DIR=./streams
-```
-
-### Contoh Konfigurasi Production
-
-⚠️ **PENTING:** Untuk production, WAJIB generate secret keys baru!
-
-```bash
-# Generate secret keys di terminal
-openssl rand -hex 32  # Untuk JWT_SECRET
-openssl rand -hex 32  # Untuk JWT_REFRESH_SECRET  
-openssl rand -hex 32  # Untuk ENCRYPTION_KEY
-```
-
-File `backend/.env` untuk production:
-```env
-NODE_ENV=production
-PORT=4000
-DATABASE_URL=postgres://postgres:PASSWORD_KUAT_ANDA@postgres:5432/desa_digital
-JWT_SECRET=hasil_dari_openssl_rand_hex_32_pertama
-JWT_REFRESH_SECRET=hasil_dari_openssl_rand_hex_32_kedua
-ENCRYPTION_KEY=hasil_dari_openssl_rand_hex_32_ketiga
-CORS_ORIGIN=https://cctv.domain-anda.com
-LOG_LEVEL=info
-STREAMS_DIR=/app/streams
-```
-
-File `frontend/.env` untuk production:
-```env
-VITE_API_URL=https://api.cctv.domain-anda.com
-```
-
-### Penjelasan CORS
-
-**CORS (Cross-Origin Resource Sharing)** mengontrol domain mana yang boleh mengakses API.
-
-| Situasi | Nilai CORS_ORIGIN |
-|---------|-------------------|
-| Development lokal | `http://localhost:3000` |
-| Production dengan domain | `https://cctv.domain-anda.com` |
-| Multiple domain | `https://domain1.com,https://domain2.com` |
-
-⚠️ Jika CORS salah konfigurasi, frontend tidak bisa berkomunikasi dengan backend!
-
----
-
-## 🗄️ Konfigurasi Database
-
-### Struktur Database
-
-Aplikasi menggunakan tabel-tabel berikut:
-
-| Tabel | Deskripsi |
-|-------|-----------|
-| `users` | Data pengguna (superadmin, admin_rt, warga) |
-| `desas` | Data desa |
-| `rts` | Data RT (relasi ke desa) |
-| `cameras` | Data kamera CCTV (relasi ke RT) |
-| `refresh_tokens` | Token refresh untuk autentikasi |
-| `activity_logs` | Log aktivitas pengguna |
-| `login_attempts` | Catatan percobaan login |
-
-### Perintah Database
-
-```bash
-# Jalankan migrasi (buat/update tabel)
-npm run db:migrate --workspace=backend
-
-# Generate migrasi baru (setelah ubah schema)
-npm run db:generate --workspace=backend
-
-# Seed data awal
-npm run db:seed --workspace=backend
-
-# Buka Drizzle Studio (GUI database)
-npm run db:studio --workspace=backend
-```
-
-### Backup Database
-
-```bash
-# Backup
-docker compose exec postgres pg_dump -U postgres desa_digital > backup_$(date +%Y%m%d).sql
-
-# Restore
-docker compose exec -T postgres psql -U postgres desa_digital < backup_20240101.sql
+# Jalankan 3x untuk 3 secret yang berbeda
+openssl rand -hex 32
 ```
 
 ---
 
 ## 🚀 Menjalankan Aplikasi
 
-### Development Mode
+### Perintah Utama
 
 ```bash
-# Dengan Docker
-docker compose up --build
+# Jalankan semua service
+docker compose -f docker-compose.prod.yml up -d
 
-# Manual - Backend (terminal 1)
-cd backend && npm run dev
+# Dengan Cloudflare Tunnel
+docker compose -f docker-compose.prod.yml --profile cloudflare up -d
 
-# Manual - Frontend (terminal 2)
-cd frontend && npm run dev
-```
+# Stop semua
+docker compose -f docker-compose.prod.yml down
 
-### Production Mode
+# Restart
+docker compose -f docker-compose.prod.yml restart
 
-```bash
-# Build untuk production
-npm run build --workspace=backend
-npm run build --workspace=frontend
+# Lihat logs
+docker compose -f docker-compose.prod.yml logs -f backend
 
-# Jalankan
-NODE_ENV=production node backend/dist/index.js
+# Update ke versi terbaru
+docker compose -f docker-compose.prod.yml pull
+docker compose -f docker-compose.prod.yml up -d
 ```
 
 ### Akses Aplikasi
 
-| Service | URL | Keterangan |
-|---------|-----|------------|
-| Frontend | http://localhost:3000 | Antarmuka web |
-| Backend API | http://localhost:4000 | REST API |
-| API Health | http://localhost:4000/health | Status server |
-| Drizzle Studio | http://localhost:4983 | GUI Database |
+| Akses | URL |
+|-------|-----|
+| **Web App** | `http://IP_SERVER` (atau `https://domain-anda.com`) |
+| **Health Check** | `http://IP_SERVER/health` |
 
 ---
 
-## 👤 Akun Default & Manajemen User
+## 👤 Akun Superadmin
 
-### Kredensial Default
+### Pengaturan Awal via .env
 
-Setelah menjalankan `db:seed`, akun berikut akan dibuat:
+Username dan password superadmin dikonfigurasi di file `.env` **sebelum** pertama kali menjalankan Docker:
+
+```env
+ADMIN_USERNAME=superadmin
+ADMIN_PASSWORD=PasswordKuatAnda123!
+ADMIN_NAME=Super Admin
+```
+
+> Akun hanya dibuat **sekali** saat pertama kali jalan. Jika sudah ada superadmin, env vars di atas diabaikan.
+
+### Data Seed (Demo)
+
+```env
+# true  = buat contoh desa, RT, user demo, kamera demo
+# false = kosong, hanya superadmin
+SEED_DEMO_DATA=false
+```
+
+Jika `SEED_DEMO_DATA=true`, akun demo berikut juga dibuat:
 
 | Role | Username | Password |
 |------|----------|----------|
-| **Superadmin** | `superadmin` | `Admin123!` |
 | **Admin RT** | `adminrt01` | `AdminRT123!` |
 | **Warga** | `warga01` | `Warga123!` |
 
-⚠️ **PENTING:** Segera ganti password default setelah login pertama!
+### Login
 
-### Cara Login
-
-1. Buka http://localhost:3000
-2. Masukkan username: `superadmin`
-3. Masukkan password: `Admin123!`
-4. Klik **Masuk**
-
-### Ganti Password
-
-1. Login ke aplikasi
-2. Klik nama Anda di pojok kanan atas
-3. Pilih **Profil**
-4. Isi password baru di bagian "Ubah Password"
-5. Klik **Simpan Perubahan**
-
-### Membuat User Baru
-
-1. Login sebagai Superadmin
-2. Klik menu **Kelola User**
-3. Klik tombol **+ Tambah User**
-4. Isi form:
-   - **Nama:** Nama lengkap user
-   - **Email:** Email aktif (untuk login)
-   - **Password:** Minimal 8 karakter
-   - **Role:** Pilih level akses
-     - `Superadmin` - Akses penuh
-     - `Admin RT` - Kelola RT tertentu
-     - `Warga` - Hanya lihat kamera RT-nya
-   - **RT:** Pilih RT (untuk Admin RT dan Warga)
-5. Klik **Simpan**
+1. Buka `http://IP_SERVER` di browser
+2. Masukkan username & password yang sudah diatur
+3. Klik **Masuk**
 
 ### Struktur Role
 
-```
-Superadmin
-├── Bisa akses semua fitur
-├── Kelola Desa, RT, User, Kamera
-└── Lihat semua CCTV
-
-Admin RT
-├── Lihat CCTV di RT-nya
-├── Tambah kamera di RT-nya
-└── Lihat daftar warga RT-nya
-
-Warga
-└── Hanya lihat CCTV di RT-nya
-```
+| Role | Akses |
+|------|-------|
+| **Superadmin** | Semua fitur: kelola desa, RT, user, kamera, pengaturan |
+| **Admin RT** | Lihat & kelola kamera di RT-nya |
+| **Warga** | Hanya lihat kamera di RT-nya |
 
 ---
 
-## 📹 Menambahkan Kamera CCTV
+## 🌐 Domain Custom & SSL Gratis
 
-### Persyaratan Kamera
+SSL **gratis dan otomatis** menggunakan Let's Encrypt. Berikut cara setupnya:
 
-- Mendukung **RTSP streaming**
-- Terhubung ke jaringan yang sama atau bisa diakses dari server
-- Memiliki **IP static** (disarankan)
+### Langkah 1: Beli Domain
 
-### Format URL RTSP
+Beli dari registrar manapun: Niagahoster, Hostinger, Namecheap, Cloudflare, dll.
 
-```
-rtsp://username:password@ip_address:port/path
-```
-
-Contoh berbagai merek:
-| Merek | Format URL RTSP |
-|-------|-----------------|
-| Hikvision | `rtsp://admin:password@192.168.1.100:554/Streaming/Channels/101` |
-| Dahua | `rtsp://admin:password@192.168.1.100:554/cam/realmonitor?channel=1&subtype=0` |
-| TP-Link | `rtsp://admin:password@192.168.1.100:554/stream1` |
-| Generic | `rtsp://admin:password@192.168.1.100:554/live` |
-
-### Langkah Menambah Kamera
-
-1. Login sebagai **Superadmin** atau **Admin RT**
-2. Klik menu **Kamera** (di sidebar)
-3. Klik tombol **+ Tambah Kamera**
-4. Isi form:
-   - **Nama Kamera:** Contoh: "CCTV Pos Ronda RT 01"
-   - **RTSP URL:** URL streaming dari kamera
-   - **Lokasi:** Deskripsi lokasi kamera
-   - **RT:** Pilih RT tempat kamera berada
-5. Klik **Simpan**
-6. Tunggu beberapa detik, kamera akan muncul di daftar
-
-### Test RTSP URL
-
-Sebelum menambahkan, test URL dengan VLC:
-1. Buka VLC Media Player
-2. Klik **Media** → **Open Network Stream**
-3. Masukkan URL RTSP
-4. Klik **Play**
-5. Jika video muncul, URL valid
-
----
-
-## 🌐 Deployment ke Production
-
-### Opsi 1: VPS/Cloud Server (Direkomendasikan)
-
-#### Langkah 1: Siapkan Server
-
-Sewa VPS dari provider seperti:
-- **DigitalOcean** (mulai $6/bulan)
-- **Vultr** (mulai $6/bulan)
-- **Linode** (mulai $5/bulan)
-- **AWS EC2** / **Google Cloud** / **Azure**
-
-Spesifikasi minimum:
-- Ubuntu 22.04 LTS
-- 2 vCPU, 4 GB RAM
-- 50 GB SSD
-
-#### Langkah 2: Setup Server
-
-```bash
-# SSH ke server
-ssh root@IP_SERVER
-
-# Update sistem
-apt update && apt upgrade -y
-
-# Install Docker
-curl -fsSL https://get.docker.com | sh
-
-# Install Docker Compose
-apt install docker-compose-plugin -y
-
-# Buat user baru (jangan pakai root)
-adduser deploy
-usermod -aG docker deploy
-usermod -aG sudo deploy
-
-# Switch ke user deploy
-su - deploy
-```
-
-#### Langkah 3: Clone dan Konfigurasi
-
-```bash
-# Clone repository
-git clone https://github.com/faqihuddinhabibi/desadigital.git
-cd desadigital
-
-# Konfigurasi environment production
-cp backend/.env.example backend/.env
-nano backend/.env
-```
-
-Edit untuk production:
-```env
-NODE_ENV=production
-PORT=4000
-DATABASE_URL=postgres://postgres:PASSWORD_KUAT@postgres:5432/desa_digital
-JWT_SECRET=GENERATE_DENGAN_openssl_rand_hex_32
-JWT_REFRESH_SECRET=GENERATE_DENGAN_openssl_rand_hex_32
-ENCRYPTION_KEY=GENERATE_DENGAN_openssl_rand_hex_32
-CORS_ORIGIN=https://cctv.domainanda.com
-LOG_LEVEL=info
-STREAMS_DIR=/app/streams
-```
-
-#### Langkah 4: Jalankan dengan Docker
-
-```bash
-docker compose up --build -d
-```
-
-### Opsi 2: Shared Hosting
-
-⚠️ **Tidak Direkomendasikan** - Shared hosting biasanya tidak mendukung:
-- Docker
-- WebSocket
-- FFmpeg
-- Port custom
-
----
-
-## 🔐 Konfigurasi Domain & SSL
-
-### Langkah 1: Beli/Siapkan Domain
-
-Beli domain dari registrar seperti:
-- Niagahoster
-- Hostinger
-- Namecheap
-- Cloudflare
-
-### Langkah 2: Arahkan DNS
+### Langkah 2: Setting DNS
 
 Login ke panel DNS domain Anda, tambahkan record:
 
 | Type | Name | Value | TTL |
 |------|------|-------|-----|
-| A | @ | IP_SERVER_ANDA | 300 |
-| A | www | IP_SERVER_ANDA | 300 |
-| A | api | IP_SERVER_ANDA | 300 |
+| **A** | `@` | `IP_SERVER_ANDA` | 300 |
+| **A** | `www` | `IP_SERVER_ANDA` | 300 |
 
-### Langkah 3: Install Nginx & Certbot
+> **Cek propagasi DNS:** Buka https://dnschecker.org dan masukkan domain Anda. Tunggu hingga semua server menunjukkan IP yang benar (biasanya 5-30 menit).
 
-```bash
-# Install Nginx
-sudo apt install nginx -y
+### Langkah 3: Update .env
 
-# Install Certbot untuk SSL
-sudo apt install certbot python3-certbot-nginx -y
-```
-
-### Langkah 4: Konfigurasi Nginx
-
-```bash
-sudo nano /etc/nginx/sites-available/desadigital
-```
-
-Isi dengan:
-```nginx
-# Frontend
-server {
-    listen 80;
-    server_name cctv.domainanda.com www.cctv.domainanda.com;
-
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
-
-# Backend API
-server {
-    listen 80;
-    server_name api.cctv.domainanda.com;
-
-    location / {
-        proxy_pass http://localhost:4000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-        
-        # Untuk upload file besar (jika ada)
-        client_max_body_size 100M;
-    }
-
-    # Untuk HLS streaming
-    location /streams/ {
-        proxy_pass http://localhost:4000/streams/;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
-```
-
-```bash
-# Aktifkan konfigurasi
-sudo ln -s /etc/nginx/sites-available/desadigital /etc/nginx/sites-enabled/
-
-# Test konfigurasi
-sudo nginx -t
-
-# Reload Nginx
-sudo systemctl reload nginx
-```
-
-### Langkah 5: Install SSL Certificate
-
-```bash
-# Generate SSL untuk semua domain
-sudo certbot --nginx -d cctv.domainanda.com -d www.cctv.domainanda.com -d api.cctv.domainanda.com
-
-# Ikuti petunjuk:
-# 1. Masukkan email
-# 2. Setuju terms of service (Y)
-# 3. Pilih redirect HTTP ke HTTPS (2)
-```
-
-### Langkah 6: Update Environment
-
-Edit `backend/.env`:
 ```env
-CORS_ORIGIN=https://cctv.domainanda.com
+CORS_ORIGIN=https://cctv.desaanda.com
 ```
 
-Edit `frontend/.env`:
+### Langkah 4: Generate SSL
+
+```bash
+# Pastikan Docker sudah jalan
+docker compose -f docker-compose.prod.yml up -d
+
+# Generate SSL
+./scripts/setup-ssl.sh cctv.desaanda.com admin@email.com
+
+# Restart
+docker compose -f docker-compose.prod.yml restart
+```
+
+**Selesai!** Buka `https://cctv.desaanda.com`. SSL akan otomatis diperpanjang oleh Certbot.
+
+> SSL juga bisa dikonfigurasi dari **menu Pengaturan → Domain & SSL** di dalam aplikasi.
+
+---
+
+## ☁️ Cloudflare Tunnel (Tanpa Buka Port)
+
+Alternatif SSL tanpa perlu membuka port 80/443 di firewall. Cocok untuk jaringan di belakang NAT.
+
+### Langkah 1: Buat Akun Cloudflare
+
+1. Daftar gratis di https://dash.cloudflare.com
+2. Tambahkan domain Anda ke Cloudflare
+3. Pindahkan nameserver domain ke Cloudflare (ikuti panduan di dashboard)
+
+### Langkah 2: Buat Tunnel
+
+1. Buka https://one.dash.cloudflare.com
+2. Pilih **Networks** → **Tunnels** → **Create a tunnel**
+3. Pilih **Cloudflared**, beri nama (contoh: `desa-digital`)
+4. **Copy token** yang diberikan (dimulai dengan `eyJ...`)
+
+### Langkah 3: Konfigurasi Hostname
+
+Di halaman tunnel, tambahkan **Public Hostname**:
+
+| Subdomain | Domain | Service |
+|-----------|--------|---------|
+| `cctv` | `desaanda.com` | `http://desa-digital-proxy:80` |
+
+### Langkah 4: Jalankan dengan Tunnel
+
+```bash
+# Tambahkan token ke .env
+echo "CLOUDFLARE_TUNNEL_TOKEN=eyJ..." >> .env
+
+# Jalankan dengan profile cloudflare
+docker compose -f docker-compose.prod.yml --profile cloudflare up -d
+```
+
+**Selesai!** Buka `https://cctv.desaanda.com`.
+
+> Tunnel juga bisa dikonfigurasi dari **menu Pengaturan → Domain & SSL** di dalam aplikasi.
+
+---
+
+## 🤖 Bot Telegram (Notifikasi)
+
+Terima notifikasi otomatis di Telegram untuk:
+- 🔴 **Kamera terputus** — beserta daftar kamera yang masih offline
+- 🟢 **Kamera terhubung kembali** — beserta daftar yang masih offline
+- 💾 **Backup database harian** — ukuran file dan jumlah backup
+
+### Cara Membuat Bot Telegram
+
+1. Buka Telegram, cari **@BotFather**
+2. Kirim `/newbot`
+3. Masukkan nama bot: `Desa Digital Alert`
+4. Masukkan username bot: `desadigital_alert_bot` (harus unik)
+5. **Copy Bot Token** yang diberikan
+
+### Cara Mendapatkan Chat ID
+
+**Opsi A — Via grup:**
+1. Buat grup Telegram, tambahkan bot ke grup
+2. Kirim pesan apapun di grup
+3. Buka di browser: `https://api.telegram.org/bot<TOKEN>/getUpdates`
+4. Cari `"chat":{"id":-100xxx}` — itulah Chat ID
+
+**Opsi B — Via bot bantuan:**
+- Kirim pesan ke [@userinfobot](https://t.me/userinfobot) atau [@getmyid_bot](https://t.me/getmyid_bot)
+
+### Konfigurasi
+
+**Via .env (untuk backup notification):**
 ```env
-VITE_API_URL=https://api.cctv.domainanda.com
+TELEGRAM_BOT_TOKEN=123456789:ABCdefGHIjklMNOpqrSTUvwxYZ
+TELEGRAM_CHAT_ID=-1001234567890
 ```
 
-Rebuild aplikasi:
+**Via UI (untuk semua notifikasi):**
+1. Login sebagai Superadmin
+2. Buka **Pengaturan** → **Telegram Bot**
+3. Masukkan Bot Token dan Chat ID
+4. Aktifkan notifikasi
+5. Klik **Test Kirim** untuk verifikasi
+6. Klik **Simpan**
+
+---
+
+## 💾 Backup & Restore Database
+
+### Backup Otomatis
+
+Database di-backup **otomatis setiap hari jam 02:00**. File backup disimpan di folder `./backups/` dan otomatis dihapus setelah 7 hari.
+
+Jika Telegram dikonfigurasi, notifikasi backup akan dikirim setiap hari.
+
+### Backup Manual
+
 ```bash
-docker compose down
-docker compose up --build -d
+# Backup ke file SQL
+docker compose -f docker-compose.prod.yml exec postgres \
+  pg_dump -U postgres desa_digital | gzip > backup_manual_$(date +%Y%m%d).sql.gz
 ```
 
-### Langkah 7: Auto-Renew SSL
+### Restore Database
 
-Certbot otomatis menambahkan cron job untuk renewal. Verifikasi:
 ```bash
-sudo certbot renew --dry-run
+# 1. Stop backend dulu
+docker compose -f docker-compose.prod.yml stop backend
+
+# 2. Restore dari file backup
+gunzip -c ./backups/desa_digital_20250212_020000.sql.gz | \
+  docker compose -f docker-compose.prod.yml exec -T postgres \
+  psql -U postgres desa_digital
+
+# 3. Start backend
+docker compose -f docker-compose.prod.yml start backend
 ```
+
+### Restore dari File .sql (tanpa gzip)
+
+```bash
+docker compose -f docker-compose.prod.yml exec -T postgres \
+  psql -U postgres desa_digital < backup_file.sql
+```
+
+### Reset Database (Hapus Semua Data)
+
+⚠️ **HATI-HATI: Menghapus semua data!**
+
+```bash
+docker compose -f docker-compose.prod.yml down -v
+docker compose -f docker-compose.prod.yml up -d
+```
+
+---
+
+## 🎨 Logo & Branding
+
+Logo, nama aplikasi, dan splash screen bisa diganti dari **menu Pengaturan**:
+
+1. Login sebagai Superadmin
+2. Buka **Pengaturan** → **Logo & Branding**
+3. Isi:
+   - **Nama Aplikasi** — Ditampilkan di login, sidebar, splash screen
+   - **URL Logo** — Untuk halaman login dan sidebar (PNG/SVG, 200x200px)
+   - **URL Logo Splash Screen** — Opsional, untuk splash screen saja
+4. Klik **Simpan**
+5. **Refresh halaman** untuk melihat perubahan
+
+> Splash screen muncul selama 3 detik saat membuka aplikasi.
+
+---
+
+## 📹 Menambahkan Kamera CCTV
+
+### Persyaratan
+
+- Kamera mendukung **RTSP streaming**
+- Kamera terhubung ke jaringan yang sama (atau bisa diakses dari server)
+- IP kamera sebaiknya **static**
+
+### Format URL RTSP
+
+| Merek | Format |
+|-------|--------|
+| **Hikvision** | `rtsp://admin:password@192.168.1.100:554/Streaming/Channels/101` |
+| **Dahua** | `rtsp://admin:password@192.168.1.100:554/cam/realmonitor?channel=1&subtype=0` |
+| **TP-Link** | `rtsp://admin:password@192.168.1.100:554/stream1` |
+| **Generic** | `rtsp://admin:password@192.168.1.100:554/live` |
+
+### Langkah
+
+1. **Test dulu** dengan VLC: Media → Open Network Stream → masukkan URL RTSP
+2. Login sebagai Superadmin → **Kamera** → **+ Tambah Kamera**
+3. Isi nama, URL RTSP, lokasi, dan pilih RT
+4. Klik **Simpan**
 
 ---
 
 ## 🔧 Troubleshooting
 
-### Masalah Umum
-
-#### 1. Container tidak bisa start
+### Container tidak bisa start
 
 ```bash
-# Lihat logs
-docker compose logs -f
-
-# Restart semua container
-docker compose down
-docker compose up --build -d
+docker compose -f docker-compose.prod.yml logs -f
+docker compose -f docker-compose.prod.yml down
+docker compose -f docker-compose.prod.yml up -d
 ```
 
-#### 2. Database connection error
+### Database connection error
 
 ```bash
-# Pastikan PostgreSQL running
-docker compose ps postgres
-
-# Cek koneksi
-docker compose exec postgres psql -U postgres -d desa_digital -c "SELECT 1"
-
-# Reset database (HATI-HATI: hapus semua data)
-docker compose down -v
-docker compose up --build -d
+docker compose -f docker-compose.prod.yml ps postgres
+docker compose -f docker-compose.prod.yml exec postgres psql -U postgres -d desa_digital -c "SELECT 1"
 ```
 
-#### 3. Kamera tidak tampil / offline
+### Kamera offline
 
-1. Pastikan URL RTSP benar (test dengan VLC)
-2. Pastikan kamera bisa diakses dari server
-3. Cek firewall tidak memblokir port RTSP (biasanya 554)
-4. Lihat logs FFmpeg:
-   ```bash
-   docker compose logs ffmpeg-relay
-   ```
+1. Test URL RTSP dengan VLC
+2. Pastikan kamera bisa diakses dari server: `curl rtsp://...` atau ping IP kamera
+3. Cek firewall tidak memblokir port 554
+4. Lihat logs: `docker compose -f docker-compose.prod.yml logs ffmpeg-relay`
 
-#### 4. SSL certificate error
+### SSL error
 
 ```bash
+# Cek sertifikat
+docker compose -f docker-compose.prod.yml exec certbot certbot certificates
+
 # Renew manual
-sudo certbot renew
-
-# Cek status certificate
-sudo certbot certificates
+docker compose -f docker-compose.prod.yml exec certbot certbot renew
+docker compose -f docker-compose.prod.yml restart nginx-proxy
 ```
 
-#### 5. Port sudah dipakai
+### Reset lengkap (mulai dari awal)
 
 ```bash
-# Cari proses yang menggunakan port
-sudo lsof -i :3000
-sudo lsof -i :4000
-
-# Kill proses jika perlu
-sudo kill -9 PID
-```
-
-### Reset Lengkap
-
-Jika ingin mulai dari awal:
-
-```bash
-# Stop dan hapus semua container & data
-docker compose down -v
-
-# Hapus images
-docker compose down --rmi all
-
-# Clone ulang
-cd ..
-rm -rf desadigital
-git clone https://github.com/faqihuddinhabibi/desadigital.git
-cd desadigital
-
-# Jalankan ulang
-docker compose up --build -d
+docker compose -f docker-compose.prod.yml down -v --rmi all
+docker compose -f docker-compose.prod.yml up -d
 ```
 
 ---
 
 ## 📞 Kontak Support
-
-Jika mengalami kendala, hubungi tim Fibernode:
 
 | Channel | Kontak |
 |---------|--------|
@@ -1000,21 +548,16 @@ Jika mengalami kendala, hubungi tim Fibernode:
 | 📱 WhatsApp | +62 xxx-xxxx-xxxx |
 | 🌐 Website | https://fibernode.id |
 
-### Informasi yang Diperlukan Saat Laporan
-
+Saat melapor, sertakan:
 1. Screenshot error
-2. Langkah yang dilakukan sebelum error
-3. Output dari `docker compose logs`
-4. Versi sistem operasi
-5. Spesifikasi server
+2. Output `docker compose -f docker-compose.prod.yml logs`
+3. Spesifikasi server (RAM, CPU, disk)
 
 ---
 
 ## 📄 Lisensi
 
 Hak Cipta © 2024 Fibernode. Semua hak dilindungi.
-
-Software ini merupakan proprietary software dan hanya boleh digunakan sesuai dengan perjanjian lisensi yang berlaku.
 
 ---
 
