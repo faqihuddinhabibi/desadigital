@@ -70,17 +70,6 @@ services:
       - frontend
       - backend
 
-  # ── Portainer (Docker GUI Management) ──
-  portainer:
-    image: portainer/portainer-ce:lts
-    container_name: desa-digital-portainer
-    restart: unless-stopped
-    ports:
-      - "9443:9443"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - portainer_data:/data
-
   # ── Let's Encrypt SSL (opsional) ──
   certbot:
     image: certbot/certbot
@@ -145,7 +134,6 @@ services:
 volumes:
   postgres_data:
   certbot_data:
-  portainer_data:
   streams_data:
   uploads_data:
   backups_data:

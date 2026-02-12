@@ -56,21 +56,23 @@ Sistem Monitoring CCTV untuk desa. Deploy 100% lewat GUI — **tidak perlu ketik
 ```
 Internet
    │
-   ├─ Port 80/443 ───▶ Nginx Proxy ──▶ Frontend (React) :3000
-   │                         │
-   │                         └────────▶ Backend API (Express) :4000
+   ├─ Port 80/443 ───▶ Nginx Proxy ─┬▶ /        → Frontend (React) :3000
+   │                                 ├▶ /api/    → Backend API (Express) :4000
+   │                                 ├▶ /ws/     → WebSocket (Socket.IO) :4000
+   │                                 └▶ /streams/→ HLS Streams :4000
    │
-   ├─ Port 9443 ────▶ Portainer GUI (Docker Management)
+   ├─ Port 9443 ────▶ Portainer GUI (install terpisah)
    │
    └─ (Opsional) ───▶ Cloudflare Tunnel
 ```
 
 | Service | Port | Akses | Keterangan |
 |---------|:----:|-------|------------|
-| **Portainer** | **9443** | `https://IP:9443` | GUI untuk kelola Docker |
+| **Portainer** | **9443** | `https://IP:9443` | GUI untuk kelola Docker (install terpisah) |
 | **Web App** | **80** | `http://IP` | Aplikasi Desa Digital |
 | **SSL** | **443** | `https://domain` | Otomatis via Certbot |
-| Backend API | 4000 | internal | Di-proxy oleh Nginx |
+| Backend API | 4000 | internal | Di-proxy oleh Nginx di `/api/` |
+| WebSocket | 4000 | internal | Di-proxy oleh Nginx di `/ws/` |
 | PostgreSQL | 5432 | internal | Tidak expose ke luar |
 | FFmpeg | — | internal | Transcoding CCTV |
 | DB Backup | — | internal | Cron backup jam 02:00 |
