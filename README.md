@@ -238,15 +238,15 @@ Di panel DNS registrar domain Anda, buat:
 1. Di Proxmox → klik container `desa-digital` → **Console**, lalu jalankan:
 
 ```bash
-cd /data/compose/<ID_STACK>   # folder stack Portainer (lihat catatan di bawah)
+cd /data/compose/<ID_STACK>   # folder stack Portainer
 bash scripts/setup-ssl.sh cctv.desaanda.com admin@email.com
 ```
 
 > **Mencari folder stack:** Di Portainer → **Stacks** → `desa-digital` → lihat path di bagian atas halaman, biasanya `/data/compose/<ID_STACK>`.
 
-Script ini otomatis menjalankan 4 langkah:
+Script otomatis mendeteksi project name dari container yang sedang berjalan, lalu menjalankan 4 langkah:
 1. Request sertifikat dari Let's Encrypt (via HTTP challenge)
-2. Update konfigurasi Nginx ke HTTPS
+2. Update konfigurasi Nginx ke HTTPS (dengan HTTP/2)
 3. Reload Nginx dengan SSL aktif
 4. Start Certbot auto-renewal (perpanjang otomatis setiap 12 jam)
 

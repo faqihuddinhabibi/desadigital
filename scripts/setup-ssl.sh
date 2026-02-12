@@ -13,12 +13,28 @@ if [ -z "$DOMAIN" ] || [ -z "$EMAIL" ]; then
   exit 1
 fi
 
+# ── Auto-detect Docker Compose project name from running containers ──
+# Portainer sets the project name to the stack name (e.g. "desa-digital"),
+# but running `docker compose` from the stack directory would default to
+# the directory name (a numeric ID). We must use the correct project name
+# so that volumes and networks match the running stack.
+PROJECT_NAME=$(docker inspect desa-digital-proxy --format '{{ index .Config.Labels "com.docker.compose.project" }}' 2>/dev/null || true)
+
+if [ -z "$PROJECT_NAME" ]; then
+  echo "❌ Container desa-digital-proxy not found. Is the stack running?"
+  echo "   Deploy the stack first via Portainer, then run this script."
+  exit 1
+fi
+
+COMPOSE="docker compose -p $PROJECT_NAME -f docker-compose.prod.yml"
+
 echo "🔒 Setting up SSL for $DOMAIN..."
+echo "📦 Detected compose project: $PROJECT_NAME"
 echo ""
 
 # ── Step 1: Get certificate (uses existing HTTP config with acme-challenge) ──
 echo "📜 Step 1/4: Requesting certificate from Let's Encrypt..."
-docker compose -f docker-compose.prod.yml run --rm --entrypoint certbot certbot certonly \
+$COMPOSE --profile ssl run --rm --entrypoint certbot certbot certonly \
   --webroot -w /var/www/certbot \
   --email "$EMAIL" \
   --agree-tos \
@@ -56,6 +72,7 @@ server {
 
 server {
     listen 443 ssl;
+    http2 on;
     server_name DOMAIN_PLACEHOLDER;
 
     ssl_certificate /etc/nginx/certs/live/DOMAIN_PLACEHOLDER/fullchain.pem;
@@ -132,16 +149,16 @@ sed -i "s/DOMAIN_PLACEHOLDER/$DOMAIN/g" nginx/conf.d/default.conf 2>/dev/null ||
 echo "✅ Nginx config updated!"
 echo ""
 
-# ── Step 3: Reload nginx (config is bind-mounted, picks up changes) ──
+# ── Step 3: Reload nginx (use container name — works regardless of project name) ──
 echo "🔄 Step 3/4: Reloading Nginx with SSL config..."
-docker compose -f docker-compose.prod.yml exec nginx-proxy nginx -s reload
+docker exec desa-digital-proxy nginx -s reload
 
 echo "✅ Nginx reloaded with SSL!"
 echo ""
 
 # ── Step 4: Start certbot auto-renewal service ──
 echo "🔄 Step 4/4: Starting Certbot auto-renewal service..."
-docker compose -f docker-compose.prod.yml --profile ssl up -d certbot
+$COMPOSE --profile ssl up -d certbot
 
 echo ""
 echo "════════════════════════════════════════════════════════"

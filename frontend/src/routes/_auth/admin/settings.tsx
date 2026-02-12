@@ -387,7 +387,7 @@ function DomainSettings() {
             <p>bash scripts/setup-ssl.sh {domain || 'cctv.desaanda.com'} admin@email.com</p>
           </div>
           <p className="text-xs text-muted-foreground mt-1"><b>Mencari folder stack:</b> Di Portainer → Stacks → <code>desa-digital</code> → lihat path di bagian atas halaman.</p>
-          <p className="mt-2">Script otomatis menjalankan: request sertifikat → update config Nginx → reload Nginx → start auto-renewal.</p>
+          <p className="mt-2">Script otomatis mendeteksi project name, lalu menjalankan: request sertifikat → update config Nginx (HTTP/2) → reload Nginx → start auto-renewal.</p>
           <p className="mt-1"><b>5.</b> Di Portainer → Stacks → <code>desa-digital</code> → <b>Editor</b> → update environment:</p>
           <div className="bg-muted p-2 rounded font-mono text-xs mt-1">
             CORS_ORIGIN=https://{domain || 'cctv.desaanda.com'}
