@@ -13,7 +13,7 @@ echo "Seeding database..."
 ADMIN_USERNAME="${ADMIN_USERNAME:-superadmin}" \
 ADMIN_PASSWORD="${ADMIN_PASSWORD:-Admin123!}" \
 ADMIN_NAME="${ADMIN_NAME:-Super Admin}" \
-SEED_DEMO_DATA="${SEED_DEMO_DATA:-true}" \
+SEED_DEMO_DATA="${SEED_DEMO_DATA:-false}" \
 npm run db:seed || echo "Seed skipped or already exists"
 
 echo "Starting application..."
